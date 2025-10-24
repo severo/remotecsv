@@ -1,6 +1,13 @@
-import { expect, test } from "vitest";
-import { fn } from "../src";
+import { describe, expect, test } from "vitest";
+import { parse } from "../src";
 
-test("fn", () => {
-  expect(fn()).toBe("Hello, tsdown!");
+describe("parse", () => {
+  test("parse", async () => {
+    const text = "hello, csvremote!!!";
+    let result = "";
+    for await (const chunk of parse(text, { chunkSize: 5, isUrl: false })) {
+      result += chunk;
+    }
+    expect(result).toBe(text);
+  });
 });
