@@ -1,23 +1,9 @@
-# tsdown-starter
+# removecsv
 
-A starter for creating a TypeScript package.
+Fetch and parse a remote CSV file.
 
-## Development
+## Thanks
 
-- Install dependencies:
+The code is heavily inspired by [Papaparse](https://www.papaparse.com/).
 
-```bash
-npm install
-```
-
-- Run the unit tests:
-
-```bash
-npm run test
-```
-
-- Build the library:
-
-```bash
-npm run build
-```
+It has partly been funded by [source.coop](https://source.coop/).
