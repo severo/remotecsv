@@ -41,7 +41,8 @@ jobs:
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
-      - run: deno run test:node --allow-all
+      - run: deno install
+      - run: deno run --allow-all test:node
 
   test-browsers:
     timeout-minutes: 60
