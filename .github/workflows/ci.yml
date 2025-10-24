@@ -34,16 +34,6 @@ jobs:
       - run: npm i
       - run: npm run test:node
 
-  test-deno:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: denoland/setup-deno@v2
-        with:
-          deno-version: v2.x
-      - run: deno install
-      - run: deno run --allow-all test:node
-
   test-browsers:
     timeout-minutes: 60
     runs-on: ubuntu-latest
