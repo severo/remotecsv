@@ -5,7 +5,7 @@ export async function* parse(
   options: {
     chunkSize?: number;
     isUrl?: boolean;
-  }
+  },
 ) {
   const chunkSize = options.chunkSize ?? defaultChunkSize;
   const isUrl = options.isUrl ?? true;
@@ -32,7 +32,7 @@ export async function* parse(
     if (response.status === 416) {
       // Requested Range Not Satisfiable
       throw new Error(
-        `Requested range not satisfiable: ${rangeStart}-${rangeEnd}`
+        `Requested range not satisfiable: ${rangeStart}-${rangeEnd}`,
       );
     }
     if (response.status === 200) {
@@ -41,7 +41,7 @@ export async function* parse(
     }
     if (response.status !== 206) {
       throw new Error(
-        `Failed to fetch chunk: ${response.status} ${response.statusText}`
+        `Failed to fetch chunk: ${response.status} ${response.statusText}`,
       );
     }
     // Check the content-range header
