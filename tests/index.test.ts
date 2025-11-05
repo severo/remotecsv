@@ -1,4 +1,5 @@
-import { parse, toUrl } from '../src'
+import { parse } from '../src/index'
+import { toUrl } from '../src/url'
 import { describe, expect, test } from 'vitest'
 
 describe('parse', () => {
