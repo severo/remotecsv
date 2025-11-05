@@ -1,4 +1,4 @@
-import { parse } from '../src/index'
+import { parse } from '../src/parse'
 import { toUrl } from '../src/url'
 import { describe, expect, test } from 'vitest'
 
