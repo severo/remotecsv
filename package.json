@@ -27,7 +27,10 @@
     "build": "tsdown",
     "dev": "tsdown --watch",
     "lint": "eslint .",
-    "test": "vitest",
+    "test:browser": "vitest run --project=browser",
+    "test:node": "vitest run --project=node",
+    "test:watch": "vitest",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
