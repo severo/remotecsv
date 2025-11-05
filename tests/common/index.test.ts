@@ -1,16 +1,15 @@
-import { parse } from '../../src'
+import { parse, toUrl } from '../../src'
+import { describe, expect, test } from 'vitest'
 
-export const tests = [
-  {
-    name: 'parse',
-    prepare: async () => {
-      const text = 'hello, csvremote!!!'
-      let result = ''
-      for await (const chunk of parse(text, { chunkSize: 5, isUrl: false })) {
-        result += chunk
-      }
-      return result
-    },
-    expected: 'hello, csvremote!!!',
-  },
-]
+describe('parse', () => {
+  test.each([1, 5, 10, 20])('parses text in chunks of size %d', async (chunkSize) => {
+    const text = 'hello, csvremote!!!'
+    const { url, fileSize, revoke } = toUrl(text)
+    let result = ''
+    for await (const chunk of parse(url, { chunkSize, fileSize })) {
+      result += chunk
+    }
+    revoke()
+    expect(result).toBe(text)
+  })
+})
