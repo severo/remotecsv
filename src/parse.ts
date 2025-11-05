@@ -16,7 +16,11 @@ export async function* parse(
     chunkSize?: number
     fileSize?: number
   },
-): AsyncGenerator<string> {
+): AsyncGenerator<{
+  text: string
+  offset: number
+  byteCount: number
+}> {
   const chunkSize = setChunkSize(options.chunkSize)
   let fileSize = options.fileSize
   const decoder = new TextDecoder('utf-8')
@@ -31,9 +35,13 @@ export async function* parse(
 
     fileSize ??= result.fileSize
     const bytesToDecode = Math.min(chunkSize, fileSize - rangeStart)
-    const chunk = decoder.decode(result.bytes.subarray(0, bytesToDecode))
+    const text = decoder.decode(result.bytes.subarray(0, bytesToDecode))
 
-    yield chunk
+    yield {
+      text,
+      offset: rangeStart,
+      byteCount: bytesToDecode,
+    }
 
     rangeStart += chunkSize
   }

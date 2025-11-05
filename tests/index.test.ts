@@ -7,11 +7,15 @@ describe('parse', () => {
     const text = 'hello, csvremote!!!'
     const { url, fileSize, revoke } = toUrl(text)
     let result = ''
-    for await (const chunk of parse(url, { chunkSize, fileSize })) {
-      result += chunk
+    let bytes = 0
+    for await (const { text, offset, byteCount } of parse(url, { chunkSize, fileSize })) {
+      result += text
+      expect(offset).toBe(bytes)
+      bytes += byteCount
     }
     revoke()
     expect(result).toBe(text)
+    expect(bytes).toBe(fileSize)
   })
   test.each([0, -1, 1.5, NaN, Infinity])('throws if chunkSize is invalid: %d', async (chunkSize) => {
     const text = 'hello, csvremote!!!'
