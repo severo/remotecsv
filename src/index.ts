@@ -1,4 +1,4 @@
-const defaultChunkSize = 1024 * 1024 // 1MB
+import { defaultChunkSize } from './constants'
 
 /**
  * Creates a blob URL from the given text.
@@ -39,7 +39,7 @@ export async function* parse(
     fileSize?: number
   },
 ): AsyncGenerator<string> {
-  const chunkSize = options.chunkSize ?? defaultChunkSize
+  const chunkSize = setChunkSize(options.chunkSize)
   let fileSize = options.fileSize
   const decoder = new TextDecoder('utf-8')
 
@@ -113,4 +113,14 @@ async function fetchChunk({ url, rangeStart, rangeEnd }: { url: string, rangeSta
   const bytes = await response.bytes()
 
   return { bytes, fileSize }
+}
+
+function setChunkSize(chunkSize?: number): number {
+  if (chunkSize === undefined) {
+    return defaultChunkSize
+  }
+  if (chunkSize <= 0 || !Number.isInteger(chunkSize)) {
+    throw new Error(`Invalid chunk size: ${chunkSize}`)
+  }
+  return chunkSize
 }

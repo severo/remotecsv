@@ -18,6 +18,7 @@ export default defineConfig({
             enabled: true,
             provider: playwright(),
             headless: true,
+            screenshotFailures: false,
             // https://vitest.dev/guide/browser/playwright
             instances: [
               { browser: 'chromium' },

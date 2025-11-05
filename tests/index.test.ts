@@ -12,4 +12,11 @@ describe('parse', () => {
     revoke()
     expect(result).toBe(text)
   })
+  test.each([0, -1, 1.5, NaN, Infinity])('throws if chunkSize is invalid: %d', async (chunkSize) => {
+    const text = 'hello, csvremote!!!'
+    const { url, fileSize, revoke } = toUrl(text)
+    const iterator = parse(url, { chunkSize, fileSize })
+    await expect(() => iterator.next()).rejects.toThrow()
+    revoke()
+  })
 })
