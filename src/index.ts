@@ -1,5 +1,11 @@
 const defaultChunkSize = 1024 * 1024 // 1MB
 
+/**
+ * Creates a blob URL from the given text.
+ *
+ * @param text The text to create a blob URL from.
+ * @returns An object containing the blob URL, the size of the text in bytes, and a function to revoke the URL.
+ */
 export function toUrl(text: string): {
   url: string
   fileSize: number
@@ -17,6 +23,15 @@ export function toUrl(text: string): {
   }
 }
 
+/**
+ * Parses a remote text file in chunks using HTTP range requests.
+ *
+ * @param url The URL of the remote text file.
+ * @param options Options for parsing.
+ * @param options.chunkSize The size of each chunk to fetch. Default is 1MB.
+ * @param options.fileSize The total size of the file in bytes. If not provided, it will be determined from the first chunk.
+ * @returns An async generator that yields chunks of text.
+ */
 export async function* parse(
   url: string,
   options: {
@@ -46,6 +61,15 @@ export async function* parse(
   }
 }
 
+/**
+ * Fetches a chunk of a remote file using HTTP range requests.
+ *
+ * @param options Options for fetching the chunk.
+ * @param options.url The URL of the remote file.
+ * @param options.rangeStart The start byte of the range to fetch.
+ * @param options.rangeEnd The end byte of the range to fetch.
+ * @returns An object containing the fetched bytes and the total file size provided in the response headers.
+ */
 async function fetchChunk({ url, rangeStart, rangeEnd }: { url: string, rangeStart: number, rangeEnd: number }): Promise<{
   bytes: Uint8Array
   fileSize: number
