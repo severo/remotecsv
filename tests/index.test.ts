@@ -2,7 +2,7 @@ import { parse, toUrl } from '../src'
 import { describe, expect, test } from 'vitest'
 
 describe('parse', () => {
-  test.each([1, 5, 10, 20])('parses text in chunks of size %d', async (chunkSize) => {
+  test.each([1, 5, 10, 20, 1_000])('parses text in chunks of size %d', async (chunkSize) => {
     const text = 'hello, csvremote!!!'
     const { url, fileSize, revoke } = toUrl(text)
     let result = ''
