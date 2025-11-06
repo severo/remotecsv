@@ -1,4 +1,5 @@
 import { checkNonNegativeInteger, checkStrictlyPositiveInteger } from './check'
+import { parseChunk } from './chunk'
 import { defaultChunkSize, defaultFrom, defaultTo } from './constants'
 import { fetchChunk } from './fetch'
 
@@ -33,7 +34,6 @@ export async function* parse(
     // TODO(SL): should we accept negative values (from the end)?
     throw new Error(`Invalid options.to: ${to}`)
   }
-  const decoder = new TextDecoder('utf-8')
 
   let rangeStart = from
   while (rangeStart <= to) {
@@ -46,15 +46,11 @@ export async function* parse(
     // It will ensure the loop will finish, and if it was greater, the number of iterations is reduced.
     // Note that result.fileSize is ensured to be a non-negative integer.
     to = Math.min(to, result.fileSize - 1)
-
     // Only decode up to the chunkSize or the last requested byte (to remove the extra byte).
-    const bytesToDecode = result.bytes.subarray(0, Math.min(chunkSize, to - rangeStart + 1))
-    const text = decoder.decode(bytesToDecode)
+    const bytes = result.bytes.subarray(0, Math.min(chunkSize, to - rangeStart + 1))
 
-    yield {
-      text,
-      offset: rangeStart,
-      byteCount: bytesToDecode.length,
+    for (const chunk of parseChunk({ bytes, offset: rangeStart })) {
+      yield chunk
     }
 
     rangeStart += chunkSize
