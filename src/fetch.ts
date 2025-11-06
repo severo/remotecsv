@@ -1,23 +1,24 @@
 // TODO(SL): return a stream reader?
 // TODO(SL): let pass a custom fetch function?
+// TODO(SL): use If-Range header?
 
 /**
  * Fetches a chunk of a remote file using HTTP range requests.
  *
  * @param options Options for fetching the chunk.
  * @param options.url The URL of the remote file.
- * @param options.rangeStart The start byte of the range to fetch.
- * @param options.rangeEnd The end byte of the range to fetch.
+ * @param options.firstByte The first byte of the range to fetch.
+ * @param options.lastByte The last byte of the range to fetch.
  * @param options.requestInit Optional fetch request initialization parameters.
  * @returns An object containing the fetched bytes and the total file size provided in the response headers.
  *   The file size is a non-negative integer.
  */
 export async function fetchChunk({
-  url, rangeStart, rangeEnd, requestInit,
+  url, firstByte, lastByte, requestInit,
 }: {
   url: string
-  rangeStart: number
-  rangeEnd: number
+  firstByte: number
+  lastByte: number
   requestInit?: RequestInit
 }): Promise<{
   bytes: Uint8Array
@@ -27,7 +28,7 @@ export async function fetchChunk({
     ...requestInit,
     headers: {
       ...(requestInit?.headers ?? {}),
-      Range: `bytes=${rangeStart}-${rangeEnd}`,
+      Range: `bytes=${firstByte}-${lastByte}`,
     },
   }
   // TODO(SL): let pass a custom fetch function?
@@ -35,7 +36,7 @@ export async function fetchChunk({
   if (response.status === 416) {
     // Requested Range Not Satisfiable
     throw new Error(
-      `Requested range not satisfiable: ${rangeStart}-${rangeEnd}`,
+      `Requested range not satisfiable: ${firstByte}-${lastByte}`,
     )
   }
   if (response.status === 200) {

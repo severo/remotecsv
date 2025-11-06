@@ -22,8 +22,8 @@ describe('fetchChunk', () => {
 
     const result = await fetchChunk({
       url: 'http://example.com/file',
-      rangeStart: 0,
-      rangeEnd: 9,
+      firstByte: 0,
+      lastByte: 9,
       requestInit: {},
     })
 
@@ -58,8 +58,8 @@ describe('fetchChunk', () => {
     await expect(
       fetchChunk({
         url: 'http://example.com/file',
-        rangeStart: 0,
-        rangeEnd: 9,
+        firstByte: 0,
+        lastByte: 9,
         requestInit: {},
       }),
     ).rejects.toThrow()
@@ -78,8 +78,8 @@ describe('fetchChunk', () => {
     await expect(
       fetchChunk({
         url: 'http://example.com/file',
-        rangeStart: 0,
-        rangeEnd: 9,
+        firstByte: 0,
+        lastByte: 9,
         requestInit: {},
       }),
     ).rejects.toThrow()
@@ -98,8 +98,8 @@ describe('fetchChunk', () => {
     await expect(
       fetchChunk({
         url: 'http://example.com/file',
-        rangeStart: 0,
-        rangeEnd: 9,
+        firstByte: 0,
+        lastByte: 9,
         requestInit: {},
       }),
     ).rejects.toThrow()
@@ -119,8 +119,8 @@ describe('fetchChunk', () => {
     await expect(
       fetchChunk({
         url: 'http://example.com/file',
-        rangeStart: 0,
-        rangeEnd: 9,
+        firstByte: 0,
+        lastByte: 9,
         requestInit: {},
       }),
     ).rejects.toThrow()
@@ -140,8 +140,8 @@ describe('fetchChunk', () => {
     await expect(
       fetchChunk({
         url: 'http://example.com/file',
-        rangeStart: 0,
-        rangeEnd: 9,
+        firstByte: 0,
+        lastByte: 9,
         requestInit: {},
       }),
     ).rejects.toThrow()
@@ -161,8 +161,8 @@ describe('fetchChunk', () => {
     await expect(
       fetchChunk({
         url: 'http://example.com/file',
-        rangeStart: 0,
-        rangeEnd: 9,
+        firstByte: 0,
+        lastByte: 9,
         requestInit: {},
       }),
     ).rejects.toThrow()
@@ -181,8 +181,8 @@ describe('fetchChunk', () => {
 
     const result = await fetchChunk({
       url: 'http://example.com/file',
-      rangeStart: 0,
-      rangeEnd: 9,
+      firstByte: 0,
+      lastByte: 9,
       requestInit: {},
     })
 
@@ -218,8 +218,8 @@ describe('fetchChunk', () => {
 
     await fetchChunk({
       url: 'http://example.com/file',
-      rangeStart: 0,
-      rangeEnd: 9,
+      firstByte: 0,
+      lastByte: 9,
       requestInit: {
         headers: {
           Authorization: 'Bearer token',
@@ -227,5 +227,40 @@ describe('fetchChunk', () => {
         credentials: 'include',
       },
     })
+  })
+
+  it('can be cancelled with AbortSignal', async () => {
+    const abortController = new AbortController()
+    const mockResponse = {
+      status: 206,
+      headers: new Headers({
+        'content-range': 'bytes 0-9/100',
+        'content-length': '10',
+      }),
+      bytes: async () => new Promise<Uint8Array>((resolve) => {
+        setTimeout(() => resolve(new Uint8Array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])), 100)
+      }),
+    } as unknown as Response
+    fetchMock.mockImplementationOnce(async (_, options) => {
+      if (options?.signal?.aborted) {
+        throw new DOMException('The operation was aborted.', 'AbortError')
+      }
+      return mockResponse
+    })
+
+    const getFetchPromise = () => fetchChunk({
+      url: 'http://example.com/file',
+      firstByte: 0,
+      lastByte: 9,
+      requestInit: {
+        signal: abortController.signal,
+      },
+    })
+
+    await expect(getFetchPromise()).resolves.not.toThrow()
+
+    abortController.abort()
+
+    await expect(getFetchPromise()).rejects.toThrow(/aborted/i)
   })
 })

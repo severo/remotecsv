@@ -10,7 +10,7 @@ describe('parse', () => {
     let result = ''
     let bytes = 0
     // passing 'to: fileSize - 1' for Node.js bug: https://github.com/nodejs/node/issues/60382
-    for await (const { text, offset, byteCount } of parse(url, { chunkSize, to: fileSize - 1 })) {
+    for await (const { text, offset, byteCount } of parse(url, { chunkSize, lastByte: fileSize - 1 })) {
       result += text
       expect(offset).toBe(bytes)
       bytes += byteCount
@@ -22,7 +22,7 @@ describe('parse', () => {
   test.each([0, -1, 1.5, NaN, Infinity])('throws if chunkSize is invalid: %s', async (chunkSize) => {
     const text = 'hello, csvremote!!!'
     const { url, fileSize, revoke } = toUrl(text)
-    const iterator = parse(url, { chunkSize, to: fileSize - 1 })
+    const iterator = parse(url, { chunkSize, lastByte: fileSize - 1 })
     await expect(iterator.next()).rejects.toThrow()
     revoke()
   })
@@ -34,16 +34,16 @@ describe('parse', () => {
     [0, 5, 'hello,'],
     [2, 5, 'llo,'],
     [5, 5, ','],
-  ])('accepts valid from: %s and to: %s', async (from, to, expected) => {
+  ])('accepts valid firstByte: %s and lastByte: %s', async (firstByte, lastByte, expected) => {
     const text = 'hello, csvremote!!!'
     const { url, revoke } = toUrl(text)
     let result = ''
     // implicit assertation in the loop: no exceptions thrown
-    for await (const { text } of parse(url, { from, to })) {
+    for await (const { text } of parse(url, { firstByte, lastByte })) {
       result += text
     }
     revoke()
-    if (to !== undefined) {
+    if (lastByte !== undefined) {
       // due to https://github.com/nodejs/node/issues/60382, on affected Node.js versions,
       // there would be an extra space at the end
       expect(result).toBe(expected)
@@ -57,10 +57,10 @@ describe('parse', () => {
     [0, NaN],
     [0, Infinity],
     [5, 0],
-  ])('throws for invalid from: %s or to: %s', async (from, to) => {
+  ])('throws for invalid from: %s or lastByte: %s', async (firstByte, lastByte) => {
     const text = 'hello, csvremote!!!'
     const { url, revoke } = toUrl(text)
-    const iterator = parse(url, { chunkSize: 10, from, to })
+    const iterator = parse(url, { chunkSize: 10, firstByte, lastByte })
     await expect(iterator.next()).rejects.toThrow()
     revoke()
   })

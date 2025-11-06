@@ -1,6 +1,6 @@
 import { checkNonNegativeInteger, checkStrictlyPositiveInteger } from './check'
 import { parseChunk } from './chunk'
-import { defaultChunkSize, defaultFrom, defaultTo } from './constants'
+import { defaultChunkSize, defaultFirstByte, defaultLastByte } from './constants'
 import { fetchChunk } from './fetch'
 
 /**
@@ -9,8 +9,8 @@ import { fetchChunk } from './fetch'
  * @param url The URL of the remote text file.
  * @param options Options for parsing.
  * @param options.chunkSize The size of each chunk to fetch. It must be a strictly positive integer. Default is 1MB.
- * @param options.from The start byte to begin parsing from. It must be a non-negative integer. Default is 0.
- * @param options.to The end byte to stop parsing at (inclusive). It must be a non-negative integer. Default is the end of the file.
+ * @param options.firstByte The byte where parsing starts. It must be a non-negative integer. Default is 0.
+ * @param options.lastByte The last byte parsed (inclusive). It must be a non-negative integer. Default is the end of the file.
  * @param options.requestInit Optional fetch request initialization parameters.
  * @returns An async generator that yields chunks of text.
  */
@@ -18,8 +18,8 @@ export async function* parse(
   url: string,
   options?: {
     chunkSize?: number
-    from?: number
-    to?: number
+    firstByte?: number
+    lastByte?: number
     requestInit?: RequestInit
   },
 ): AsyncGenerator<{
@@ -28,28 +28,26 @@ export async function* parse(
   byteCount: number
 }> {
   const chunkSize = checkStrictlyPositiveInteger(options?.chunkSize) ?? defaultChunkSize
-  const from = checkNonNegativeInteger(options?.from) ?? defaultFrom
-  let to = checkNonNegativeInteger(options?.to) ?? defaultTo
-  if (to !== undefined && to < from) {
-    // TODO(SL): should we accept negative values (from the end)?
-    throw new Error(`Invalid options.to: ${to}`)
+  // TODO(SL): should we accept negative values (from the end)?
+  let firstByte = checkNonNegativeInteger(options?.firstByte) ?? defaultFirstByte
+  let lastByte = checkNonNegativeInteger(options?.lastByte) ?? defaultLastByte
+  if (lastByte !== undefined && lastByte < firstByte) {
+    throw new Error('lastByte must be greater than firstByte')
   }
 
-  let fileOffset = from
+  let cursor = firstByte
   let bytes: Uint8Array<ArrayBufferLike> = new Uint8Array(0)
-
-  let fetchStart = fileOffset + bytes.length
   while (true) {
     // Always request one extra byte, due to https://github.com/nodejs/node/issues/60382
     const extraByte = 1
-    const fetchEnd = fetchStart + chunkSize - 1 + extraByte
-    const { bytes: allBytes, fileSize } = await fetchChunk({ url, rangeStart: fetchStart, rangeEnd: fetchEnd, requestInit: options?.requestInit })
+    const chunkLastByte = firstByte + chunkSize - 1 + extraByte
+    const { bytes: allBytes, fileSize } = await fetchChunk({ url, firstByte, lastByte: chunkLastByte, requestInit: options?.requestInit })
     // Set the end limit (to) to the last byte in the file
     // It will ensure the loop will finish, and if it was greater, the number of iterations is reduced.
     // Note that result.fileSize is ensured to be a non-negative integer.
-    to = Math.min(to, fileSize - 1)
+    lastByte = Math.min(lastByte, fileSize - 1)
     // Only decode up to the chunkSize or the last requested byte (to remove the extra byte).
-    const fetchedBytes = allBytes.subarray(0, Math.min(chunkSize, to - fetchStart + 1))
+    const fetchedBytes = allBytes.subarray(0, Math.min(chunkSize, lastByte - firstByte + 1))
 
     // Concatenate previous bytes with current bytes
     if (bytes.length === 0) {
@@ -71,7 +69,7 @@ export async function* parse(
     for (const { text, byteCount } of parseChunk({ bytes })) {
       yield {
         text,
-        offset: fileOffset + consumedBytes,
+        offset: cursor + consumedBytes,
         byteCount,
       }
       consumedBytes += byteCount
@@ -80,17 +78,16 @@ export async function* parse(
       }
     }
 
-    // Prepare the next iteration
-
-    // keep remaining bytes. We use slice, and not subarray, so that the bytes buffer can be garbage collected.
+    // Use the remaining bytes for the next iteration, if any.
+    // We use .slice, and not .subarray, so that the bytes buffer can be garbage collected.
     bytes = bytes.slice(consumedBytes)
-    fileOffset += consumedBytes
-    fetchStart += chunkSize
+    cursor += consumedBytes
+    firstByte += chunkSize
 
-    if (fetchStart > to) {
+    if (firstByte > lastByte) {
       break
     }
-    if (fileOffset + bytes.length !== fetchStart) {
+    if (cursor + bytes.length !== firstByte) {
       throw new Error('Invalid state: non-contiguous offsets')
     }
   }
