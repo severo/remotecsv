@@ -41,13 +41,13 @@ export async function* parse(
     const extraByte = 1
     const rangeEnd = rangeStart + chunkSize - 1 + extraByte
 
-    const result = await fetchChunk({ url, rangeStart, rangeEnd, requestInit: options?.requestInit })
+    const { bytes: allBytes, fileSize } = await fetchChunk({ url, rangeStart, rangeEnd, requestInit: options?.requestInit })
     // Set the end limit (to) to the last byte in the file
     // It will ensure the loop will finish, and if it was greater, the number of iterations is reduced.
     // Note that result.fileSize is ensured to be a non-negative integer.
-    to = Math.min(to, result.fileSize - 1)
+    to = Math.min(to, fileSize - 1)
     // Only decode up to the chunkSize or the last requested byte (to remove the extra byte).
-    const bytes = result.bytes.subarray(0, Math.min(chunkSize, to - rangeStart + 1))
+    const bytes = allBytes.subarray(0, Math.min(chunkSize, to - rangeStart + 1))
 
     for (const chunk of parseChunk({ bytes, offset: rangeStart })) {
       yield chunk
