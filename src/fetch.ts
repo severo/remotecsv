@@ -1,3 +1,6 @@
+// TODO(SL): return a stream reader?
+// TODO(SL): let pass a custom fetch function?
+
 /**
  * Fetches a chunk of a remote file using HTTP range requests.
  *
