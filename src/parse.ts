@@ -35,6 +35,7 @@ export async function* parse(
 
     const result = await fetchChunk({ url, rangeStart, rangeEnd, requestInit: options?.requestInit })
 
+    // result.fileSize is a (finite) non-negative integer
     fileSize ??= result.fileSize
     const bytesToDecode = Math.min(chunkSize, fileSize - rangeStart)
     const text = decoder.decode(result.bytes.subarray(0, bytesToDecode))

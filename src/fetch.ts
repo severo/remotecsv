@@ -7,6 +7,7 @@
  * @param options.rangeEnd The end byte of the range to fetch.
  * @param options.requestInit Optional fetch request initialization parameters.
  * @returns An object containing the fetched bytes and the total file size provided in the response headers.
+ *   The file size is a non-negative integer.
  */
 export async function fetchChunk({
   url, rangeStart, rangeEnd, requestInit,
@@ -53,7 +54,7 @@ export async function fetchChunk({
     throw new Error(`Invalid content-range header: ${contentRange}`)
   }
   const fileSize = parseInt(last)
-  if (isNaN(fileSize)) {
+  if (!Number.isSafeInteger(fileSize) || fileSize < 0) {
     throw new Error(`Invalid file size in content-range header: ${last}`)
   }
 
