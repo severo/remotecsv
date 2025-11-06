@@ -1,6 +1,7 @@
+import { describe, expect, test } from 'vitest'
+
 import { parse } from '../src/parse'
 import { toUrl } from '../src/url'
-import { describe, expect, test } from 'vitest'
 
 describe('parse', () => {
   test.each([1, 5, 10, 20, 1_000, undefined])('accepts chunk size of %s', async (chunkSize) => {

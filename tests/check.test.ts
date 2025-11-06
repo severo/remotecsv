@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { checkStrictlyPositiveInteger, checkNonNegativeInteger } from '../src/check'
+
+import { checkNonNegativeInteger, checkStrictlyPositiveInteger } from '../src/check'
 
 describe('checkStrictlyPositiveInteger', () => {
   it.for([1, 100])('returns the provided valid integer', (value) => {

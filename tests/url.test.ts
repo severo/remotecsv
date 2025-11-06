@@ -1,5 +1,6 @@
-import { toUrl } from '../src/url'
 import { describe, expect, it } from 'vitest'
+
+import { toUrl } from '../src/url'
 
 describe('toUrl', () => {
   it('creates a valid blob URL and revokes it', async () => {

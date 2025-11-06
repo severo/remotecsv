@@ -1,6 +1,6 @@
-import { checkStrictlyPositiveInteger, checkNonNegativeInteger } from './check'
-import { fetchChunk } from './fetch'
+import { checkNonNegativeInteger, checkStrictlyPositiveInteger } from './check'
 import { defaultChunkSize, defaultFrom, defaultTo } from './constants'
+import { fetchChunk } from './fetch'
 
 /**
  * Parses a remote text file in chunks using HTTP range requests.

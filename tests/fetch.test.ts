@@ -1,5 +1,6 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
 import { fetchChunk } from '../src/fetch.js'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const fetchMock = vi.spyOn(globalThis, 'fetch')
 
