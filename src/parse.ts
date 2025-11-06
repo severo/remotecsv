@@ -35,24 +35,62 @@ export async function* parse(
     throw new Error(`Invalid options.to: ${to}`)
   }
 
-  let rangeStart = from
-  while (rangeStart <= to) {
+  let fileOffset = from
+  let bytes: Uint8Array<ArrayBufferLike> = new Uint8Array(0)
+
+  let fetchStart = fileOffset + bytes.length
+  while (fetchStart <= to) {
+    if (fileOffset + bytes.length !== fetchStart) {
+      throw new Error('Invalid state: non-contiguous offsets')
+    }
+
     // Always request one extra byte, due to https://github.com/nodejs/node/issues/60382
     const extraByte = 1
-    const rangeEnd = rangeStart + chunkSize - 1 + extraByte
-
-    const { bytes: allBytes, fileSize } = await fetchChunk({ url, rangeStart, rangeEnd, requestInit: options?.requestInit })
+    const fetchEnd = fetchStart + chunkSize - 1 + extraByte
+    const { bytes: allBytes, fileSize } = await fetchChunk({ url, rangeStart: fetchStart, rangeEnd: fetchEnd, requestInit: options?.requestInit })
     // Set the end limit (to) to the last byte in the file
     // It will ensure the loop will finish, and if it was greater, the number of iterations is reduced.
     // Note that result.fileSize is ensured to be a non-negative integer.
     to = Math.min(to, fileSize - 1)
     // Only decode up to the chunkSize or the last requested byte (to remove the extra byte).
-    const bytes = allBytes.subarray(0, Math.min(chunkSize, to - rangeStart + 1))
+    const fetchedBytes = allBytes.subarray(0, Math.min(chunkSize, to - fetchStart + 1))
 
-    for (const chunk of parseChunk({ bytes, offset: rangeStart })) {
-      yield chunk
+    // Concatenate previous bytes with current bytes
+    if (bytes.length === 0) {
+      bytes = fetchedBytes
+    }
+    else {
+      // TODO(SL): are the following TODOs overkill?
+      // TODO(SL): avoid copying?
+      // TODO(SL): consider using a buffer pool: https://medium.com/@artemkhrenov/sharedarraybuffer-and-memory-management-in-javascript-06738cda8f51
+      // TODO(SL): throw if the allocated memory is above some limit?
+      // TODO(SL): avoid decoding the same bytes multiple times?
+      const combinedBytes = new Uint8Array(bytes.length + fetchedBytes.length)
+      combinedBytes.set(fetchedBytes, 0)
+      combinedBytes.set(bytes, bytes.length)
+      bytes = combinedBytes
     }
 
-    rangeStart += chunkSize
+    let consumedBytes = 0
+    for (const { text, byteCount } of parseChunk({ bytes })) {
+      yield {
+        text,
+        offset: fileOffset + consumedBytes,
+        byteCount,
+      }
+      consumedBytes += byteCount
+      if (consumedBytes > bytes.length) {
+        throw new Error('Invalid state: consumedBytes exceeds bytes length')
+      }
+    }
+
+    // Prepare the next iteration
+
+    // keep remaining bytes. We use slice, and not subarray, so that the bytes buffer can be garbage collected.
+    bytes = bytes.slice(consumedBytes)
+    fileOffset += consumedBytes
+    fetchStart += chunkSize
   }
+
+  // TODO(SL): What to do with remaining bytes? For now, ignore them.
 }

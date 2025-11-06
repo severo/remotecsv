@@ -7,13 +7,11 @@ describe('parseChunk', () => {
     const text = 'hello, csvremote!!!'
     const encoder = new TextEncoder()
     const bytes = encoder.encode(text)
-    const offset = 42
     let i = 0
-    for (const result of parseChunk({ bytes, offset })) {
+    for (const result of parseChunk({ bytes })) {
       i++
       expect(result).toEqual({
         text,
-        offset,
         byteCount: bytes.length,
       })
     }
