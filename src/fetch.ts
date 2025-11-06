@@ -28,7 +28,7 @@
  * @param options.firstByte The first byte of the chunk to fetch. It must be a non-negative integer.
  * @param options.maxLastByte An upper bound on the last chunk byte (inclusive). If the chunk exceeds this byte, it will be trimmed. It must be a non-negative integer.
  * @param options.requestInit Optional fetch request initialization parameters.
- * @returns An object containing the fetched bytes and the new maxLastByte value (which is adjusted if it exceeds the file size).
+ * @returns An object containing the fetched bytes and the file size.
  */
 export async function fetchChunk({
   url,
@@ -46,12 +46,12 @@ export async function fetchChunk({
   const extraByte = 1
   const chunkLastByte = firstByte + chunkSize - 1 + extraByte
   const { bytes: allBytes, fileSize } = await fetchRange({ url, firstByte, lastByte: chunkLastByte, requestInit })
-  // Adjust lastByte in case it's beyond the file size (it can be infinite).
+  // Adjust lastByte in case it's beyond the file size
   // Note that fileSize is ensured to be a non-negative integer.
-  maxLastByte = Math.min(maxLastByte ?? Infinity, fileSize - 1)
-  // Only decode up to the chunkSize or the last requested byte, to remove the extra byte.
-  const bytes = allBytes.subarray(0, Math.min(chunkSize, maxLastByte - firstByte + 1))
-  return { bytes, maxLastByte }
+  const numBytes = Math.min(chunkSize, fileSize - firstByte, (maxLastByte ?? Infinity) - firstByte + 1)
+  // Only return up to the chunkSize or the last requested byte.
+  const bytes = allBytes.subarray(0, numBytes)
+  return { bytes, fileSize }
 }
 
 /**

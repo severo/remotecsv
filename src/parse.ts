@@ -38,7 +38,7 @@ export async function* parse(
   let cursor = firstByte
   let bytes: Uint8Array<ArrayBufferLike> = new Uint8Array(0)
   while (true) {
-    const chunk = await fetchChunk({
+    const { bytes: chunkBytes, fileSize } = await fetchChunk({
       url,
       chunkSize,
       firstByte,
@@ -46,16 +46,16 @@ export async function* parse(
       requestInit: options?.requestInit,
     })
 
-    // Update lastByte in case it was adjusted due to file size
+    // Update lastByte in case it is undefined or greater than the file size
     // It will ensure the loop will finish, and if it was greater, the number of iterations is reduced.
-    // Note that chunk.maxLastByte is ensured to be a non-negative integer.
-    if (lastByte === undefined || chunk.maxLastByte < lastByte) {
-      lastByte = chunk.maxLastByte
+    // Note that fileSize is ensured to be a non-negative integer.
+    if (lastByte === undefined || fileSize <= lastByte) {
+      lastByte = fileSize - 1
     }
 
     // Concatenate previous bytes with current bytes
     if (bytes.length === 0) {
-      bytes = chunk.bytes
+      bytes = chunkBytes
     }
     else {
       // TODO(SL): are the following TODOs overkill?
@@ -63,9 +63,9 @@ export async function* parse(
       // TODO(SL): consider using a buffer pool: https://medium.com/@artemkhrenov/sharedarraybuffer-and-memory-management-in-javascript-06738cda8f51
       // TODO(SL): throw if the allocated memory is above some limit?
       // TODO(SL): avoid decoding the same bytes multiple times?
-      const combinedBytes = new Uint8Array(bytes.length + chunk.bytes.length)
+      const combinedBytes = new Uint8Array(bytes.length + chunkBytes.length)
       combinedBytes.set(bytes, 0)
-      combinedBytes.set(chunk.bytes, bytes.length)
+      combinedBytes.set(chunkBytes, bytes.length)
       bytes = combinedBytes
     }
 

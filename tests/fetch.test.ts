@@ -270,7 +270,7 @@ describe('fetchChunk', () => {
     vi.resetAllMocks()
   })
 
-  it('fetches a chunk and returns the maxLastByte based on file size', async () => {
+  it('fetches a chunk and returns the file size', async () => {
     const mockResponse = {
       status: 206,
       headers: new Headers({
@@ -289,7 +289,7 @@ describe('fetchChunk', () => {
     })
 
     expect(result.bytes).toEqual(new Uint8Array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]))
-    expect(result.maxLastByte).toBe(14)
+    expect(result.fileSize).toBe(15)
   })
 
   it('trims the chunk if it exceeds the file size', async () => {
@@ -311,7 +311,7 @@ describe('fetchChunk', () => {
     })
 
     expect(result.bytes).toEqual(new Uint8Array([0, 1, 2, 3, 4]))
-    expect(result.maxLastByte).toBe(4)
+    expect(result.fileSize).toBe(5)
   })
 
   it('trims the chunk if it exceeds the provided maxLastByte', async () => {
@@ -334,29 +334,7 @@ describe('fetchChunk', () => {
     })
 
     expect(result.bytes).toEqual(new Uint8Array([0, 1, 2, 3, 4]))
-    expect(result.maxLastByte).toBe(4) // remains the same as provided
-  })
-
-  it('updates the maxLastByte based on file size if it is lower than the provided one', async () => {
-    const mockResponse = {
-      status: 206,
-      headers: new Headers({
-        'content-range': 'bytes 0-1/5',
-        'content-length': '2',
-      }),
-      bytes: async () => new Uint8Array([0, 1]),
-    } as unknown as Response
-    fetchMock.mockResolvedValueOnce(mockResponse)
-
-    const result = await fetchChunk({
-      url: 'http://example.com/file',
-      chunkSize: 2,
-      firstByte: 0,
-      maxLastByte: 15,
-      requestInit: {},
-    })
-    expect(result.bytes).toEqual(new Uint8Array([0, 1]))
-    expect(result.maxLastByte).toBe(4) // updated based on file size
+    expect(result.fileSize).toBe(20)
   })
 
   it('uses provided requestInit headers', async () => {
