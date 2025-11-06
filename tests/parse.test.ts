@@ -10,8 +10,8 @@ describe('parse', () => {
     let result = ''
     let bytes = 0
     // passing 'to: fileSize - 1' for Node.js bug: https://github.com/nodejs/node/issues/60382
-    for await (const { text, offset, byteCount } of parse(url, { chunkSize, lastByte: fileSize - 1 })) {
-      result += text
+    for await (const { data, metadata: { offset, byteCount } } of parse(url, { chunkSize, lastByte: fileSize - 1 })) {
+      result += data
       expect(offset).toBe(bytes)
       bytes += byteCount
     }
@@ -39,8 +39,8 @@ describe('parse', () => {
     const { url, revoke } = toUrl(text)
     let result = ''
     // implicit assertation in the loop: no exceptions thrown
-    for await (const { text } of parse(url, { firstByte, lastByte })) {
-      result += text
+    for await (const { data } of parse(url, { firstByte, lastByte })) {
+      result += data
     }
     revoke()
     if (lastByte !== undefined) {

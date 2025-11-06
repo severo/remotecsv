@@ -12,7 +12,7 @@ import { fetchChunk } from './fetch'
  * @param options.firstByte The byte where parsing starts. It must be a non-negative integer. Default is 0.
  * @param options.lastByte The last byte parsed (inclusive). It must be a non-negative integer. Default is the end of the file.
  * @param options.requestInit Optional fetch request initialization parameters.
- * @returns An async generator that yields chunks of text.
+ * @returns An async generator that yields parsed rows.
  */
 export async function* parse(
   url: string,
@@ -23,9 +23,12 @@ export async function* parse(
     requestInit?: RequestInit
   },
 ): AsyncGenerator<{
-  text: string
-  offset: number
-  byteCount: number
+  data: string
+  errors: unknown[]
+  metadata: {
+    offset: number
+    byteCount: number
+  }
 }> {
   const chunkSize = checkStrictlyPositiveInteger(options?.chunkSize) ?? defaultChunkSize
   // TODO(SL): should we accept negative values (from the end)?
@@ -70,11 +73,14 @@ export async function* parse(
     }
 
     let consumedBytes = 0
-    for (const { text, byteCount } of parseChunk({ bytes })) {
+    for (const { text: data, byteCount } of parseChunk({ bytes })) {
       yield {
-        text,
-        offset: cursor + consumedBytes,
-        byteCount,
+        data,
+        errors: [], // TODO(SL): proper errors
+        metadata: {
+          offset: cursor + consumedBytes,
+          byteCount,
+        },
       }
       consumedBytes += byteCount
       if (consumedBytes > bytes.length) {
