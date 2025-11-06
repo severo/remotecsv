@@ -46,11 +46,12 @@ export async function fetchChunk({
   const extraByte = 1
   const chunkLastByte = firstByte + chunkSize - 1 + extraByte
   const { bytes: allBytes, fileSize } = await fetchRange({ url, firstByte, lastByte: chunkLastByte, requestInit })
-  // Adjust lastByte in case it's beyond the file size
-  // Note that fileSize is ensured to be a non-negative integer.
-  const numBytes = Math.min(chunkSize, fileSize - firstByte, (maxLastByte ?? Infinity) - firstByte + 1)
-  // Only return up to the chunkSize or the last requested byte.
-  const bytes = allBytes.subarray(0, numBytes)
+  const bytes = allBytes.subarray(0, Math.min(
+    // no more than the chunk size (without the extra byte)
+    chunkSize,
+    // no more than the max last byte
+    (maxLastByte ?? Infinity) - firstByte + 1,
+  ))
   return { bytes, fileSize }
 }
 
