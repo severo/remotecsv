@@ -27,6 +27,7 @@ export async function fetchChunk({
       Range: `bytes=${rangeStart}-${rangeEnd}`,
     },
   }
+  // TODO(SL): let pass a custom fetch function?
   const response = await fetch(url, mergedRequestInit)
   if (response.status === 416) {
     // Requested Range Not Satisfiable
