@@ -1,11 +1,37 @@
-import { defaultChunkSize } from './constants'
+/**
+ * Throws if the provided value is not a strictly positive integer. Undefined is allowed.
+ *
+ * @param value The desired value.
+ * @returns The validated value: a strictly positive integer.
+ */
+export function checkStrictlyPositiveInteger(value?: number): number | undefined {
+  if (
+    value === undefined
+    || (
+      Number.isInteger(value)
+      && value > 0
+    )
+  ) {
+    return value
+  }
+  throw new Error(`Invalid value: ${value}`)
+}
 
-export function setChunkSize(chunkSize?: number): number {
-  if (chunkSize === undefined) {
-    return defaultChunkSize
+/**
+ * Throws if the provided value is not a non-negative integer. Undefined is allowed.
+ *
+ * @param value The desired value.
+ * @returns The validated value: a non-negative integer.
+ */
+export function checkNonNegativeInteger(value?: number): number | undefined {
+  if (
+    value === undefined
+    || (
+      Number.isInteger(value)
+      && value >= 0
+    )
+  ) {
+    return value
   }
-  if (chunkSize <= 0 || !Number.isInteger(chunkSize)) {
-    throw new Error(`Invalid chunk size: ${chunkSize}`)
-  }
-  return chunkSize
+  throw new Error(`Invalid value: ${value}`)
 }

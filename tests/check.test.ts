@@ -1,18 +1,32 @@
 import { describe, expect, it } from 'vitest'
-import { setChunkSize } from '../src/check'
-import { defaultChunkSize } from '../src/constants'
+import { checkStrictlyPositiveInteger, checkNonNegativeInteger } from '../src/check'
 
-describe('setChunkSize', () => {
-  it('returns the provided valid chunk size', () => {
-    expect(setChunkSize(512)).toBe(512)
+describe('checkStrictlyPositiveInteger', () => {
+  it.for([1, 100])('returns the provided valid integer', (value) => {
+    expect(checkStrictlyPositiveInteger(value)).toBe(value)
   })
-  it('returns default chunk size if undefined', () => {
-    expect(setChunkSize(undefined)).toBe(defaultChunkSize)
+  it('accepts undefined', () => {
+    expect(checkStrictlyPositiveInteger(undefined)).toBe(undefined)
   })
-  it.for([0, -1])('throws error for non-positive chunk size', (chunkSize) => {
-    expect(() => setChunkSize(chunkSize)).toThrow()
+  it.for([0, -1])('throws error for non-positive value', (value) => {
+    expect(() => checkStrictlyPositiveInteger(value)).toThrow()
   })
-  it.for([1.5])('throws error for non-integer chunk size', (chunkSize) => {
-    expect(() => setChunkSize(chunkSize)).toThrow()
+  it.for([1.5, NaN, -Infinity, Infinity])('throws error for non-integer value', (value) => {
+    expect(() => checkStrictlyPositiveInteger(value)).toThrow()
+  })
+})
+
+describe('checkNonNegativeInteger', () => {
+  it.for([0, 1, 100])('returns the provided valid integer', (value) => {
+    expect(checkNonNegativeInteger(value)).toBe(value)
+  })
+  it('accepts undefined', () => {
+    expect(checkNonNegativeInteger(undefined)).toBe(undefined)
+  })
+  it.for([-1])('throws error for negative value', (value) => {
+    expect(() => checkNonNegativeInteger(value)).toThrow()
+  })
+  it.for([1.5, NaN, -Infinity, Infinity])('throws error for non-integer value', (value) => {
+    expect(() => checkNonNegativeInteger(value)).toThrow()
   })
 })
