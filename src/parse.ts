@@ -1,6 +1,6 @@
 import { checkNonNegativeInteger, checkStrictlyPositiveInteger } from './check'
 import { parseChunk } from './chunk'
-import { defaultChunkSize, defaultFirstByte, defaultLastByte } from './constants'
+import { defaultChunkSize } from './constants'
 import { fetchChunk } from './fetch'
 
 /**
@@ -29,8 +29,8 @@ export async function* parse(
 }> {
   const chunkSize = checkStrictlyPositiveInteger(options?.chunkSize) ?? defaultChunkSize
   // TODO(SL): should we accept negative values (from the end)?
-  let firstByte = checkNonNegativeInteger(options?.firstByte) ?? defaultFirstByte
-  let lastByte = checkNonNegativeInteger(options?.lastByte) ?? defaultLastByte
+  let firstByte = checkNonNegativeInteger(options?.firstByte) ?? 0
+  let lastByte = checkNonNegativeInteger(options?.lastByte)
   if (lastByte !== undefined && lastByte < firstByte) {
     throw new Error('lastByte must be greater than firstByte')
   }
@@ -38,20 +38,24 @@ export async function* parse(
   let cursor = firstByte
   let bytes: Uint8Array<ArrayBufferLike> = new Uint8Array(0)
   while (true) {
-    // Always request one extra byte, due to https://github.com/nodejs/node/issues/60382
-    const extraByte = 1
-    const chunkLastByte = firstByte + chunkSize - 1 + extraByte
-    const { bytes: allBytes, fileSize } = await fetchChunk({ url, firstByte, lastByte: chunkLastByte, requestInit: options?.requestInit })
-    // Set the end limit (to) to the last byte in the file
+    const chunk = await fetchChunk({
+      url,
+      chunkSize,
+      firstByte,
+      maxLastByte: lastByte,
+      requestInit: options?.requestInit,
+    })
+
+    // Update lastByte in case it was adjusted due to file size
     // It will ensure the loop will finish, and if it was greater, the number of iterations is reduced.
-    // Note that result.fileSize is ensured to be a non-negative integer.
-    lastByte = Math.min(lastByte, fileSize - 1)
-    // Only decode up to the chunkSize or the last requested byte (to remove the extra byte).
-    const fetchedBytes = allBytes.subarray(0, Math.min(chunkSize, lastByte - firstByte + 1))
+    // Note that chunk.maxLastByte is ensured to be a non-negative integer.
+    if (lastByte === undefined || chunk.maxLastByte < lastByte) {
+      lastByte = chunk.maxLastByte
+    }
 
     // Concatenate previous bytes with current bytes
     if (bytes.length === 0) {
-      bytes = fetchedBytes
+      bytes = chunk.bytes
     }
     else {
       // TODO(SL): are the following TODOs overkill?
@@ -59,9 +63,9 @@ export async function* parse(
       // TODO(SL): consider using a buffer pool: https://medium.com/@artemkhrenov/sharedarraybuffer-and-memory-management-in-javascript-06738cda8f51
       // TODO(SL): throw if the allocated memory is above some limit?
       // TODO(SL): avoid decoding the same bytes multiple times?
-      const combinedBytes = new Uint8Array(bytes.length + fetchedBytes.length)
-      combinedBytes.set(fetchedBytes, 0)
-      combinedBytes.set(bytes, bytes.length)
+      const combinedBytes = new Uint8Array(bytes.length + chunk.bytes.length)
+      combinedBytes.set(bytes, 0)
+      combinedBytes.set(chunk.bytes, bytes.length)
       bytes = combinedBytes
     }
 

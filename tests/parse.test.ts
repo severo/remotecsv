@@ -4,8 +4,8 @@ import { parse } from '../src/parse'
 import { toUrl } from '../src/url'
 
 describe('parse', () => {
-  test.each([1, 5, 10, 20, 1_000, undefined])('accepts chunk size of %s', async (chunkSize) => {
-    const text = 'hello, csvremote!!!'
+  test.each([1, 2, 3, 10, 17, 18, 19, 20, 21, 1_000, undefined])('accepts chunk size of %s', async (chunkSize) => {
+    const text = 'hello, csvremote!!!' // length: 19
     const { url, fileSize, revoke } = toUrl(text)
     let result = ''
     let bytes = 0

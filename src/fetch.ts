@@ -3,9 +3,61 @@
 // TODO(SL): use If-Range header?
 
 /**
- * Fetches a chunk of a remote file using HTTP range requests.
+ * Fetches a chunk of a remote file.
+ *
+ * @remarks
+ * The implementation includes a partial workaround for a Node.js bug
+ * (https://github.com/nodejs/node/issues/60382) by always requesting
+ * one extra byte. For the workaround to be complete, in the case of
+ * bug (Node.js, object URL), the caller must create an object URL with
+ * an extra byte at the end, and pass lastByte with the correct value.
+ *
+ * For example:
+ * ```js
+ * const blob = new Blob([text + ' '])
+ * const url = URL.createObjectURL(blob)
+ * const fileSize = blob.size - 1 // subtract the extra space
+ * const result = fetchChunk({ url, chunkSize, firstByte, maxLastByte: fileSize - 1 })
+ * ```
+ *
+ * See `toUrl` in `src/url.ts` for a helper function that creates such URLs.
  *
  * @param options Options for fetching the chunk.
+ * @param options.url The URL of the remote file.
+ * @param options.chunkSize The size of the chunk to fetch.
+ * @param options.firstByte The first byte of the chunk to fetch. It must be a non-negative integer.
+ * @param options.maxLastByte An upper bound on the last chunk byte (inclusive). If the chunk exceeds this byte, it will be trimmed. It must be a non-negative integer.
+ * @param options.requestInit Optional fetch request initialization parameters.
+ * @returns An object containing the fetched bytes and the new maxLastByte value (which is adjusted if it exceeds the file size).
+ */
+export async function fetchChunk({
+  url,
+  chunkSize,
+  firstByte,
+  maxLastByte,
+  requestInit,
+}: {
+  url: string
+  chunkSize: number
+  firstByte: number
+  maxLastByte?: number
+  requestInit?: RequestInit
+}) {
+  const extraByte = 1
+  const chunkLastByte = firstByte + chunkSize - 1 + extraByte
+  const { bytes: allBytes, fileSize } = await fetchRange({ url, firstByte, lastByte: chunkLastByte, requestInit })
+  // Adjust lastByte in case it's beyond the file size (it can be infinite).
+  // Note that fileSize is ensured to be a non-negative integer.
+  maxLastByte = Math.min(maxLastByte ?? Infinity, fileSize - 1)
+  // Only decode up to the chunkSize or the last requested byte, to remove the extra byte.
+  const bytes = allBytes.subarray(0, Math.min(chunkSize, maxLastByte - firstByte + 1))
+  return { bytes, maxLastByte }
+}
+
+/**
+ * Fetches a range of a remote file using HTTP range.
+ *
+ * @param options Options for fetching the range.
  * @param options.url The URL of the remote file.
  * @param options.firstByte The first byte of the range to fetch.
  * @param options.lastByte The last byte of the range to fetch.
@@ -13,7 +65,7 @@
  * @returns An object containing the fetched bytes and the total file size provided in the response headers.
  *   The file size is a non-negative integer.
  */
-export async function fetchChunk({
+export async function fetchRange({
   url, firstByte, lastByte, requestInit,
 }: {
   url: string
@@ -45,7 +97,7 @@ export async function fetchChunk({
   }
   if (response.status !== 206) {
     throw new Error(
-      `Failed to fetch chunk: ${response.status} ${response.statusText}`,
+      `Failed to fetch range: ${response.status} ${response.statusText}`,
     )
   }
   // Check the content-range header
@@ -62,9 +114,6 @@ export async function fetchChunk({
   if (!Number.isSafeInteger(fileSize) || fileSize < 0) {
     throw new Error(`Invalid file size in content-range header: ${last}`)
   }
-
-  // Decode exactly chunkSize bytes or less if it's the last chunk
   const bytes = await response.bytes()
-
   return { bytes, fileSize }
 }
