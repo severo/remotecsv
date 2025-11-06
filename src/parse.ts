@@ -39,11 +39,7 @@ export async function* parse(
   let bytes: Uint8Array<ArrayBufferLike> = new Uint8Array(0)
 
   let fetchStart = fileOffset + bytes.length
-  while (fetchStart <= to) {
-    if (fileOffset + bytes.length !== fetchStart) {
-      throw new Error('Invalid state: non-contiguous offsets')
-    }
-
+  while (true) {
     // Always request one extra byte, due to https://github.com/nodejs/node/issues/60382
     const extraByte = 1
     const fetchEnd = fetchStart + chunkSize - 1 + extraByte
@@ -90,6 +86,13 @@ export async function* parse(
     bytes = bytes.slice(consumedBytes)
     fileOffset += consumedBytes
     fetchStart += chunkSize
+
+    if (fetchStart > to) {
+      break
+    }
+    if (fileOffset + bytes.length !== fetchStart) {
+      throw new Error('Invalid state: non-contiguous offsets')
+    }
   }
 
   // TODO(SL): What to do with remaining bytes? For now, ignore them.
