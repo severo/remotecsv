@@ -14,6 +14,10 @@ describe('parseChunk', () => {
         data: [text],
         metadata: {
           byteCount: bytes.length,
+          offset: 0,
+          delimiter: ',',
+          newline: '\n',
+          quote: '"',
         },
       })
     }
