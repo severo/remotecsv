@@ -1,7 +1,8 @@
 import { checkNonNegativeInteger, checkStrictlyPositiveInteger } from './check'
-import { type ChunkResult, parseChunk } from './chunk'
+import { parseChunk } from './chunk'
 import { defaultChunkSize } from './constants'
 import { fetchChunk } from './fetch'
+import type { ParseResult } from './types'
 
 /**
  * Parses a remote text file in chunks using HTTP range requests.
@@ -26,7 +27,7 @@ export async function* parseUrl(
     fetchChunk?: typeof fetchChunk
     parseChunk?: typeof parseChunk
   },
-): AsyncGenerator<ChunkResult, void, unknown> {
+): AsyncGenerator<ParseResult, void, unknown> {
   const chunkSize = checkStrictlyPositiveInteger(options?.chunkSize) ?? defaultChunkSize
   // TODO(SL): should we accept negative values (from the end)?
   let firstByte = checkNonNegativeInteger(options?.firstByte) ?? 0
@@ -70,16 +71,19 @@ export async function* parseUrl(
     }
 
     let consumedBytes = 0
-    for (const { data, metadata } of (options?.parseChunk ?? parseChunk)({ bytes })) {
-      consumedBytes += metadata.byteCount
+    for (const result of (options?.parseChunk ?? parseChunk)({
+      bytes,
+      ignoreLastRow: true, // the remaining bytes may not contain a full last row
+    })) {
+      consumedBytes += result.meta.byteCount
       if (consumedBytes > bytes.length) {
         throw new Error('Invalid state: consumedBytes exceeds bytes length')
       }
       yield {
-        data,
-        metadata: {
-          ...metadata,
-          offset: metadata.offset + cursor,
+        ...result,
+        meta: {
+          ...result.meta,
+          offset: result.meta.offset + cursor,
         },
       }
     }
@@ -101,4 +105,5 @@ export async function* parseUrl(
   }
 
   // TODO(SL): What to do with remaining bytes? For now, ignore them.
+  // call again with ignoreLastRow: false for the remaining bytes?
 }

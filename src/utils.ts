@@ -19,3 +19,37 @@ export function toUrl(text: string): {
     },
   }
 }
+
+// From PapaParse (https://www.papaparse.com/)
+
+/**
+ * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions
+ * @param string The string to escape.
+ * @returns The escaped string.
+ */
+export function escapeRegExp(string: string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') // $& means the whole matched string
+}
+
+/**
+ * Test if the string array is an empty line
+ * @param s The string array
+ * @param skipEmptyLines If 'greedy', trims all spaces to test for emptiness
+ * @returns Whether the line is empty
+ */
+export function testEmptyLine(s: string[], skipEmptyLines?: 'greedy' | boolean) {
+  return skipEmptyLines === 'greedy' ? s.join('').trim() === '' : 0 in s && s[0].length === 0
+}
+
+// /**
+//  * Strip character from UTF-8 BOM encoded files that cause issue parsing the file
+//  * @param string The string to strip BOM from
+//  * @returns The string without BOM
+//  */
+// function stripBom(string: string) {
+//   // Note(SL): take the BOM into account when calculating byte offsets (see the ignoreBOM TextDecoder option too)
+//   if (string.charCodeAt(0) === 0xfeff) {
+//     return string.slice(1)
+//   }
+//   return string
+// }

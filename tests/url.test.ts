@@ -1,7 +1,25 @@
 import { describe, expect, it, test } from 'vitest'
 
+import type { ParseResult } from '../src/types'
 import { parseUrl } from '../src/url'
 import { toUrl } from '../src/utils'
+
+function* parseChunkMock({ bytes }: { bytes: Uint8Array }): Generator<ParseResult, void, unknown> {
+  const decoder = new TextDecoder('utf-8')
+  const decoded = decoder.decode(bytes)
+  yield {
+    row: [decoded],
+    errors: [],
+    meta: {
+      byteCount: bytes.length,
+      offset: 0,
+      newline: '\n',
+      // quote: '"',
+      delimiter: ',',
+      cursor: decoded.length,
+    },
+  }
+}
 
 describe('parseUrl', () => {
   test.each([1, 2, 3, 10, 17, 18, 19, 20, 21, 1_000, undefined])('accepts chunk size of %s', async (chunkSize) => {
@@ -10,8 +28,8 @@ describe('parseUrl', () => {
     let result = ''
     let bytes = 0
     // passing 'to: fileSize - 1' for Node.js bug: https://github.com/nodejs/node/issues/60382
-    for await (const { data, metadata: { offset, byteCount } } of parseUrl(url, { chunkSize, lastByte: fileSize - 1 })) {
-      result += data
+    for await (const { row, meta: { offset, byteCount } } of parseUrl(url, { chunkSize, lastByte: fileSize - 1, parseChunk: parseChunkMock })) {
+      result += row
       expect(offset).toBe(bytes)
       bytes += byteCount
     }
@@ -39,8 +57,8 @@ describe('parseUrl', () => {
     const { url, revoke } = toUrl(text)
     let result = ''
     // implicit assertation in the loop: no exceptions thrown
-    for await (const { data } of parseUrl(url, { firstByte, lastByte })) {
-      result += data[0]
+    for await (const { row } of parseUrl(url, { firstByte, lastByte, parseChunk: parseChunkMock })) {
+      result += row[0]
     }
     revoke()
     if (lastByte !== undefined) {
@@ -82,23 +100,28 @@ describe('parseUrl', () => {
       const slice = bytes.slice(0, 2)
       const decoded = decoder.decode(slice)
       yield {
-        data: [decoded],
-        metadata: {
+        row: [decoded],
+        errors: [],
+        meta: {
           byteCount: slice.length,
           offset: 0,
+          newline: '\n',
+          // quote: '"',
+          delimiter: ',',
+          cursor: decoded.length,
         },
       }
     }
     let result = ''
     let bytes = 0
     let i = 0
-    for await (const { data, metadata: { offset, byteCount } } of parseUrl(url, {
+    for await (const { row, meta: { offset, byteCount } } of parseUrl(url, {
       chunkSize: 5,
       lastByte: fileSize - 1,
       parseChunk: parseChunkMock,
     })) {
       i++
-      result += data[0]
+      result += row[0]
       expect(offset).toBe(bytes)
       bytes += byteCount
     }
@@ -120,30 +143,35 @@ describe('parseUrl', () => {
       const firstPartBytes = encoder.encode(firstPart)
       const byteCount = firstPartBytes.length
       yield {
-        data: [firstPart],
-        metadata: {
+        row: [firstPart],
+        errors: [],
+        meta: {
           byteCount,
           offset: 0,
+          newline: '\n',
+          // quote: '"',
+          delimiter: ',',
+          cursor: firstPart.length,
         },
       }
     }
     let result = ''
     let bytes = 0
     let i = 0
-    for await (const { data, metadata: { offset, byteCount } } of parseUrl(url, {
+    for await (const { row, meta: { offset, byteCount } } of parseUrl(url, {
       chunkSize: 10,
       lastByte: fileSize - 1,
       parseChunk: parseChunkMock,
     })) {
       expect(offset).toBe(bytes)
       if (i === 0) {
-        expect(data).toStrictEqual(['hello,'])
+        expect(row).toStrictEqual(['hello,'])
       }
       else {
-        expect(data).toStrictEqual([' csvremote!!!'])
+        expect(row).toStrictEqual([' csvremote!!!'])
       }
       i++
-      result += data[0]
+      result += row[0]
       bytes += byteCount
     }
     revoke()
@@ -157,10 +185,15 @@ describe('parseUrl', () => {
     function* parseChunkMock({ bytes }: { bytes: Uint8Array }) {
       // yield more bytes than provided
       yield {
-        data: [],
-        metadata: {
+        row: [],
+        errors: [],
+        meta: {
           byteCount: 2 * bytes.length,
           offset: 0,
+          newline: '\n',
+          // quote: '"',
+          delimiter: ',',
+          cursor: 0, // wrong too
         },
       }
     }
