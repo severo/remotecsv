@@ -1,11 +1,10 @@
 import { checkNonNegativeInteger, checkStrictlyPositiveInteger } from './check'
-import { parseChunk } from './chunk'
+import { type ChunkResult, parseChunk } from './chunk'
 import { defaultChunkSize } from './constants'
 import { fetchChunk } from './fetch'
 
 /**
  * Parses a remote text file in chunks using HTTP range requests.
- *
  * @param url The URL of the remote text file.
  * @param options Options for parsing.
  * @param options.chunkSize The size of each chunk to fetch. It must be a strictly positive integer. Default is 1MB.
@@ -14,6 +13,7 @@ import { fetchChunk } from './fetch'
  * @param options.requestInit Optional fetch request initialization parameters.
  * @param options.fetchChunk Optional custom fetchChunk function for fetching chunks.
  * @param options.parseChunk Optional custom parseChunk function for parsing chunks.
+ * @yields Parsed rows along with metadata.
  * @returns An async generator that yields parsed rows.
  */
 export async function* parseUrl(
@@ -26,14 +26,7 @@ export async function* parseUrl(
     fetchChunk?: typeof fetchChunk
     parseChunk?: typeof parseChunk
   },
-): AsyncGenerator<{
-  data: string[]
-  errors: unknown[]
-  metadata: {
-    offset: number
-    byteCount: number
-  }
-}> {
+): AsyncGenerator<ChunkResult, void, unknown> {
   const chunkSize = checkStrictlyPositiveInteger(options?.chunkSize) ?? defaultChunkSize
   // TODO(SL): should we accept negative values (from the end)?
   let firstByte = checkNonNegativeInteger(options?.firstByte) ?? 0
@@ -78,17 +71,15 @@ export async function* parseUrl(
 
     let consumedBytes = 0
     for (const { data, metadata } of (options?.parseChunk ?? parseChunk)({ bytes })) {
-      const offset = cursor + consumedBytes
       consumedBytes += metadata.byteCount
       if (consumedBytes > bytes.length) {
         throw new Error('Invalid state: consumedBytes exceeds bytes length')
       }
       yield {
         data,
-        errors: [], // TODO(SL): proper errors
         metadata: {
           ...metadata,
-          offset,
+          offset: metadata.offset + cursor,
         },
       }
     }

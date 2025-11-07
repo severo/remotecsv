@@ -5,7 +5,6 @@
 /**
  * Fetches a chunk of a remote file.
  *
- * @remarks
  * The implementation includes a partial workaround for a Node.js bug
  * (https://github.com/nodejs/node/issues/60382) by always requesting
  * one extra byte. For the workaround to be complete, in the case of
@@ -21,7 +20,6 @@
  * ```
  *
  * See `toUrl` in `src/url.ts` for a helper function that creates such URLs.
- *
  * @param options Options for fetching the chunk.
  * @param options.url The URL of the remote file.
  * @param options.chunkSize The size of the chunk to fetch.
@@ -57,7 +55,6 @@ export async function fetchChunk({
 
 /**
  * Fetches a range of a remote file using HTTP range.
- *
  * @param options Options for fetching the range.
  * @param options.url The URL of the remote file.
  * @param options.firstByte The first byte of the range to fetch.

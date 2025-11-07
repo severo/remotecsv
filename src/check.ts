@@ -1,12 +1,8 @@
 /**
  * Throws if the provided value is not a strictly positive integer. Undefined is allowed.
- *
  * @param value The desired value.
  * @returns The validated value: a strictly positive integer.
  */
-export function checkStrictlyPositiveInteger(value?: undefined): undefined
-export function checkStrictlyPositiveInteger(value: number): number
-export function checkStrictlyPositiveInteger(value?: number): number | undefined
 export function checkStrictlyPositiveInteger(value?: number): number | undefined {
   if (
     value === undefined
@@ -22,13 +18,9 @@ export function checkStrictlyPositiveInteger(value?: number): number | undefined
 
 /**
  * Throws if the provided value is not a non-negative integer. Undefined is allowed.
- *
  * @param value The desired value.
  * @returns The validated value: a non-negative integer.
  */
-export function checkNonNegativeInteger(value?: undefined): undefined
-export function checkNonNegativeInteger(value: number): number
-export function checkNonNegativeInteger(value?: number): number | undefined
 export function checkNonNegativeInteger(value?: number): number | undefined {
   if (
     value === undefined

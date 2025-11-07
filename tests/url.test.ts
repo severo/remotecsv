@@ -85,6 +85,7 @@ describe('parseUrl', () => {
         data: [decoded],
         metadata: {
           byteCount: slice.length,
+          offset: 0,
         },
       }
     }
@@ -122,6 +123,7 @@ describe('parseUrl', () => {
         data: [firstPart],
         metadata: {
           byteCount,
+          offset: 0,
         },
       }
     }
@@ -158,6 +160,7 @@ describe('parseUrl', () => {
         data: [],
         metadata: {
           byteCount: 2 * bytes.length,
+          offset: 0,
         },
       }
     }

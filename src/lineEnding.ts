@@ -1,7 +1,6 @@
 /**
  * Returns the line ending string to be used in parsing.
- *
- * @return The line ending string.
+ * @returns The line ending string.
  */
 export function getLineEnding() {
   // TODO(SL): make the line ending configurable
