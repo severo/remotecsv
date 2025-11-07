@@ -102,6 +102,7 @@ export async function* parse(
     if (firstByte > lastByte) {
       break
     }
+    /* v8 ignore if -- @preserve */
     if (cursor + bytes.length !== firstByte) {
       // assertion: it should not happen.
       throw new Error('Invalid state: non-contiguous offsets')
