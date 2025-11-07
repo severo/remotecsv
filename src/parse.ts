@@ -21,6 +21,8 @@ export async function* parse(
     firstByte?: number
     lastByte?: number
     requestInit?: RequestInit
+    fetchChunk?: typeof fetchChunk
+    parseChunk?: typeof parseChunk
   },
 ): AsyncGenerator<{
   data: string
@@ -41,7 +43,7 @@ export async function* parse(
   let cursor = firstByte
   let bytes: Uint8Array<ArrayBufferLike> = new Uint8Array(0)
   while (true) {
-    const { bytes: chunkBytes, fileSize } = await fetchChunk({
+    const { bytes: chunkBytes, fileSize } = await (options?.fetchChunk ?? fetchChunk)({
       url,
       chunkSize,
       firstByte,
@@ -73,18 +75,19 @@ export async function* parse(
     }
 
     let consumedBytes = 0
-    for (const { text: data, byteCount } of parseChunk({ bytes })) {
+    for (const { text: data, byteCount } of (options?.parseChunk ?? parseChunk)({ bytes })) {
+      const offset = cursor + consumedBytes
+      consumedBytes += byteCount
+      if (consumedBytes > bytes.length) {
+        throw new Error('Invalid state: consumedBytes exceeds bytes length')
+      }
       yield {
         data,
         errors: [], // TODO(SL): proper errors
         metadata: {
-          offset: cursor + consumedBytes,
+          offset,
           byteCount,
         },
-      }
-      consumedBytes += byteCount
-      if (consumedBytes > bytes.length) {
-        throw new Error('Invalid state: consumedBytes exceeds bytes length')
       }
     }
 
@@ -98,6 +101,7 @@ export async function* parse(
       break
     }
     if (cursor + bytes.length !== firstByte) {
+      // assertion: it should not happen.
       throw new Error('Invalid state: non-contiguous offsets')
     }
   }

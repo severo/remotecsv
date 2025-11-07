@@ -73,4 +73,93 @@ describe('parse', () => {
     await expect(iterator.next()).rejects.toThrow(/abort/i)
     revoke()
   })
+  it('keeps bytes between iterations, and might not consume all the bytes', async () => {
+    const text = 'hello, csvremote!!!'
+    const { url, fileSize, revoke } = toUrl(text)
+    function* parseChunkMock({ bytes }: { bytes: Uint8Array }) {
+      // only yield the first two bytes, decoded as text
+      const decoder = new TextDecoder('utf-8')
+      const slice = bytes.slice(0, 2)
+      const decoded = decoder.decode(slice)
+      yield {
+        text: decoded,
+        byteCount: slice.length,
+      }
+    }
+    let result = ''
+    let bytes = 0
+    let i = 0
+    for await (const { data, metadata: { offset, byteCount } } of parse(url, {
+      chunkSize: 5,
+      lastByte: fileSize - 1,
+      parseChunk: parseChunkMock,
+    })) {
+      i++
+      result += data
+      expect(offset).toBe(bytes)
+      bytes += byteCount
+    }
+    revoke()
+    expect(i).toBeGreaterThan(1) // ensure multiple iterations
+    expect(result).toBe(text.slice(0, i * 2)) // each iteration yields 2 bytes, in order
+    expect(bytes).toBe(i * 2) // each iteration yields 2 bytes, not all the bytes are consumed
+  })
+  it('keeps bytes between iterations and might consume all the bytes', async () => {
+    const text = 'hello, csvremote!!!'
+    const { url, fileSize, revoke } = toUrl(text)
+    function* parseChunkMock({ bytes }: { bytes: Uint8Array }) {
+      // only process up to the first comma
+      const decoder = new TextDecoder('utf-8')
+      const text = decoder.decode(bytes)
+      const splits = text.split(',')
+      const firstPart = splits[0] + (splits.length > 1 ? ',' : '')
+      const encoder = new TextEncoder()
+      const firstPartBytes = encoder.encode(firstPart)
+      const byteCount = firstPartBytes.length
+      yield {
+        text: firstPart,
+        byteCount,
+      }
+    }
+    let result = ''
+    let bytes = 0
+    let i = 0
+    for await (const { data, metadata: { offset, byteCount } } of parse(url, {
+      chunkSize: 10,
+      lastByte: fileSize - 1,
+      parseChunk: parseChunkMock,
+    })) {
+      expect(offset).toBe(bytes)
+      if (i === 0) {
+        expect(data).toBe('hello,')
+      }
+      else {
+        expect(data).toBe(' csvremote!!!')
+      }
+      i++
+      result += data
+      bytes += byteCount
+    }
+    revoke()
+    expect(i).toBe(2)
+    expect(result).toBe(text)
+    expect(bytes).toBe(fileSize)
+  })
+  it('throws if parseChunk yields more bytes than provided', async () => {
+    const text = 'hello, csvremote!!!'
+    const { url, revoke } = toUrl(text)
+    function* parseChunkMock({ bytes }: { bytes: Uint8Array }) {
+      // yield more bytes than provided
+      yield {
+        text: 'invalid',
+        byteCount: 2 * bytes.length,
+      }
+    }
+    const iterator = parse(url, {
+      chunkSize: 5,
+      parseChunk: parseChunkMock,
+    })
+    await expect(iterator.next()).rejects.toThrow()
+    revoke()
+  })
 })
