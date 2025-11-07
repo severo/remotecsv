@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest'
+import { describe, expect, it, test } from 'vitest'
 
 import { parse } from '../src/parse'
 import { toUrl } from '../src/url'
@@ -62,6 +62,15 @@ describe('parse', () => {
     const { url, revoke } = toUrl(text)
     const iterator = parse(url, { chunkSize: 10, firstByte, lastByte })
     await expect(iterator.next()).rejects.toThrow()
+    revoke()
+  })
+  it('uses the requestInit option, allowing to pass an abort signal', async () => {
+    const text = 'hello, csvremote!!!'
+    const { url, revoke } = toUrl(text)
+    const controller = new AbortController()
+    const iterator = parse(url, { requestInit: { signal: controller.signal } })
+    controller.abort()
+    await expect(iterator.next()).rejects.toThrow(/abort/i)
     revoke()
   })
 })
