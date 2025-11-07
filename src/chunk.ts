@@ -1,3 +1,9 @@
+/**
+ * Parses a chunk of bytes into CSV data.
+ *
+ * @param bytes The chunk of bytes to parse.
+ * @return A generator yielding parsed data and metadata.
+ */
 export function* parseChunk({
   bytes,
 }: {
