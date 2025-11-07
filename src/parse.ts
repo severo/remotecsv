@@ -12,6 +12,8 @@ import { fetchChunk } from './fetch'
  * @param options.firstByte The byte where parsing starts. It must be a non-negative integer. Default is 0.
  * @param options.lastByte The last byte parsed (inclusive). It must be a non-negative integer. Default is the end of the file.
  * @param options.requestInit Optional fetch request initialization parameters.
+ * @param options.fetchChunk Optional custom fetchChunk function for fetching chunks.
+ * @param options.parseChunk Optional custom parseChunk function for parsing chunks.
  * @returns An async generator that yields parsed rows.
  */
 export async function* parse(
