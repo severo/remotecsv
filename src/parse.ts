@@ -27,7 +27,7 @@ export async function* parse(
     parseChunk?: typeof parseChunk
   },
 ): AsyncGenerator<{
-  data: string
+  data: string[]
   errors: unknown[]
   metadata: {
     offset: number
@@ -77,9 +77,9 @@ export async function* parse(
     }
 
     let consumedBytes = 0
-    for (const { text: data, byteCount } of (options?.parseChunk ?? parseChunk)({ bytes })) {
+    for (const { data, metadata } of (options?.parseChunk ?? parseChunk)({ bytes })) {
       const offset = cursor + consumedBytes
-      consumedBytes += byteCount
+      consumedBytes += metadata.byteCount
       if (consumedBytes > bytes.length) {
         throw new Error('Invalid state: consumedBytes exceeds bytes length')
       }
@@ -87,8 +87,8 @@ export async function* parse(
         data,
         errors: [], // TODO(SL): proper errors
         metadata: {
+          ...metadata,
           offset,
-          byteCount,
         },
       }
     }

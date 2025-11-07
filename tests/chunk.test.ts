@@ -11,8 +11,10 @@ describe('parseChunk', () => {
     for (const result of parseChunk({ bytes })) {
       i++
       expect(result).toEqual({
-        text,
-        byteCount: bytes.length,
+        data: [text],
+        metadata: {
+          byteCount: bytes.length,
+        },
       })
     }
     // For now: only one iteration per chunk

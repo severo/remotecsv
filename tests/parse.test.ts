@@ -40,7 +40,7 @@ describe('parse', () => {
     let result = ''
     // implicit assertation in the loop: no exceptions thrown
     for await (const { data } of parse(url, { firstByte, lastByte })) {
-      result += data
+      result += data[0]
     }
     revoke()
     if (lastByte !== undefined) {
@@ -82,8 +82,10 @@ describe('parse', () => {
       const slice = bytes.slice(0, 2)
       const decoded = decoder.decode(slice)
       yield {
-        text: decoded,
-        byteCount: slice.length,
+        data: [decoded],
+        metadata: {
+          byteCount: slice.length,
+        },
       }
     }
     let result = ''
@@ -95,7 +97,7 @@ describe('parse', () => {
       parseChunk: parseChunkMock,
     })) {
       i++
-      result += data
+      result += data[0]
       expect(offset).toBe(bytes)
       bytes += byteCount
     }
@@ -117,8 +119,10 @@ describe('parse', () => {
       const firstPartBytes = encoder.encode(firstPart)
       const byteCount = firstPartBytes.length
       yield {
-        text: firstPart,
-        byteCount,
+        data: [firstPart],
+        metadata: {
+          byteCount,
+        },
       }
     }
     let result = ''
@@ -131,13 +135,13 @@ describe('parse', () => {
     })) {
       expect(offset).toBe(bytes)
       if (i === 0) {
-        expect(data).toBe('hello,')
+        expect(data).toStrictEqual(['hello,'])
       }
       else {
-        expect(data).toBe(' csvremote!!!')
+        expect(data).toStrictEqual([' csvremote!!!'])
       }
       i++
-      result += data
+      result += data[0]
       bytes += byteCount
     }
     revoke()
@@ -151,8 +155,10 @@ describe('parse', () => {
     function* parseChunkMock({ bytes }: { bytes: Uint8Array }) {
       // yield more bytes than provided
       yield {
-        text: 'invalid',
-        byteCount: 2 * bytes.length,
+        data: [],
+        metadata: {
+          byteCount: 2 * bytes.length,
+        },
       }
     }
     const iterator = parse(url, {

@@ -3,8 +3,10 @@ export function* parseChunk({
 }: {
   bytes: Uint8Array
 }): Generator<{
-  text: string
-  byteCount: number
+  data: string[]
+  metadata: {
+    byteCount: number
+  }
 }> {
   // TODO(SL): reuse decoder?
   const decoder = new TextDecoder('utf-8')
@@ -12,7 +14,9 @@ export function* parseChunk({
   const text = decoder.decode(bytes)
 
   yield {
-    text,
-    byteCount: bytes.length,
+    data: [text],
+    metadata: {
+      byteCount: bytes.length,
+    },
   }
 }
