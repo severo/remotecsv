@@ -111,4 +111,11 @@ describe('guessDelimiter', () => {
     const result = guessDelimiter(input)
     expect(result.bestDelimiter).toBe(',')
   })
+
+  it('should return unsuccessful when no delimiter is found', () => {
+    const input = 'just some random text without delimiters\nanother line without delimiters'
+    const result = guessDelimiter(input)
+    expect(result.successful).toBe(false)
+    expect(result.bestDelimiter).toBeUndefined()
+  })
 })
