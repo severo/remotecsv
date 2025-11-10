@@ -73,6 +73,7 @@ export function* parse(input: string, options: ParseOptions): Generator<ParseRes
     escapeChar,
     ignoreLastRow,
   } = validateOptions(options)
+  // TODO(SL): allow passing no options?
 
   // We don't need to compute some of these every time parse() is called,
   // but having them in a more local scope seems to perform better
