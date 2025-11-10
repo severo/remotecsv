@@ -40,6 +40,18 @@ describe('guessDelimiter', () => {
     expect(result.bestDelimiter).toBe('|')
   })
 
+  it('should guess ASCII 30 as the best delimiter', () => {
+    const input = `a${RECORD_SEP}b${RECORD_SEP}c\n1${RECORD_SEP}2${RECORD_SEP}3\n4${RECORD_SEP}5${RECORD_SEP}6\n`
+    const result = guessDelimiter(input)
+    expect(result.bestDelimiter).toBe(RECORD_SEP)
+  })
+
+  it('should guess ASCII 31 as the best delimiter', () => {
+    const input = `a${UNIT_SEP}b${UNIT_SEP}c\n1${UNIT_SEP}2${UNIT_SEP}3\n4${UNIT_SEP}5${UNIT_SEP}6\n`
+    const result = guessDelimiter(input)
+    expect(result.bestDelimiter).toBe(UNIT_SEP)
+  })
+
   it('should skip empty lines while detecting delimiter', () => {
     const input = 'a,b\n1,2\n3,4\n'
     const result = guessDelimiter(input, undefined, true)
