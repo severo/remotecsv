@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { toUrl } from '../src/utils'
+import { escapeRegExp, testEmptyLine, toUrl } from '../src/utils'
 
 describe('toUrl', () => {
   it('creates a valid blob URL and revokes it', async () => {
@@ -48,5 +48,30 @@ describe('toUrl', () => {
 
     const data = await response.text()
     expect(data).toBe(' ') // only the extra space
+  })
+})
+
+describe('escapeRegExp', () => {
+  it('escapes special regex characters', () => {
+    const input = 'Hello. How are you? (I hope you\'re well!) *$^+[]{}|\\'
+    const escaped = escapeRegExp(input)
+    expect(escaped).toBe('Hello\\. How are you\\? \\(I hope you\'re well!\\) \\*\\$\\^\\+\\[\\]\\{\\}\\|\\\\')
+  })
+})
+
+describe('testEmptyLine', () => {
+  it.for([true, false, undefined])('detects empty lines correctly with skipEmptyLines being: %s (same behavior!)', (skipEmptyLines) => {
+    expect(testEmptyLine([''], skipEmptyLines)).toBe(true)
+    expect(testEmptyLine(['\t'], skipEmptyLines)).toBe(false)
+    expect(testEmptyLine(['   '], skipEmptyLines)).toBe(false)
+    expect(testEmptyLine(['', ''], skipEmptyLines)).toBe(false)
+    expect(testEmptyLine(['data'], skipEmptyLines)).toBe(false)
+  })
+
+  it('detects empty lines correctly with skipEmptyLines as "greedy"', () => {
+    expect(testEmptyLine([''], 'greedy')).toBe(true)
+    expect(testEmptyLine(['   '], 'greedy')).toBe(true)
+    expect(testEmptyLine([' \t', ' '], 'greedy')).toBe(true)
+    expect(testEmptyLine(['data'], 'greedy')).toBe(false)
   })
 })

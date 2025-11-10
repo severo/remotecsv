@@ -38,7 +38,7 @@ export function escapeRegExp(string: string) {
  * @returns Whether the line is empty
  */
 export function testEmptyLine(s: string[], skipEmptyLines?: 'greedy' | boolean) {
-  return skipEmptyLines === 'greedy' ? s.join('').trim() === '' : 0 in s && s[0].length === 0
+  return skipEmptyLines === 'greedy' ? s.join('').trim() === '' : 0 in s && s.length === 1 && s[0].length === 0
 }
 
 // /**
