@@ -21,7 +21,7 @@ function* parseChunkMock(bytes: Uint8Array): Generator<ParseResult, void, unknow
   }
 }
 
-describe('parseUrl', () => {
+describe('parseUrl, while mocking parseChunk, ', () => {
   test.each([1, 2, 3, 10, 17, 18, 19, 20, 21, 1_000, undefined])('accepts chunk size of %s', async (chunkSize) => {
     const text = 'hello, csvremote!!!' // length: 19
     const { url, fileSize, revoke } = toUrl(text)

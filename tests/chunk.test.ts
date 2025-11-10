@@ -37,7 +37,7 @@ describe('parseChunk', () => {
   })
 })
 
-describe('High-level tests', () => {
+describe('Papaparse high-level tests', () => {
   PARSE_TESTS.forEach((test) => {
     it(test.description, () => {
       const config: Parameters<typeof parseChunk>[1] = test.config || {}
