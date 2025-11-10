@@ -1,28 +1,4 @@
 {
-  "compilerOptions": {
-    "target": "esnext",
-    "lib": ["es2023"],
-    "module": "preserve",
-    "skipLibCheck": true,
-
-    "moduleResolution": "bundler",
-    "isolatedModules": true,
-    "moduleDetection": "force",
-
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true,
-    "noUncheckedIndexedAccess": true,
-
-    "emitDeclarationOnly": true,
-    "declaration": true,
-
-    "resolveJsonModule": true,
-    "types": ["node"],
-    "esModuleInterop": true,
-    "verbatimModuleSyntax": true
-  },
-  "include": ["src"]
+  "extends": "./tsconfig.build.json",
+  "include": ["**/*.js", "**/*.ts"]
 }

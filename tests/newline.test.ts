@@ -42,10 +42,10 @@ describe('guessLineEndings', () => {
   })
 
   it.for([
-    ['line1\rline2\nline3\r\nline4\nline5\r', '\r'],
-    ['line1\nline2\rline3\r\nline4\nline5\n', '\n'],
-    ['line1\r\nline2\rline3\nline4\r\nline5\r\n', '\r\n'],
-  ])('should handle mixed line endings', ([input, expected]) => {
+    { input: 'line1\rline2\nline3\r\nline4\nline5\r', expected: '\r' },
+    { input: 'line1\nline2\rline3\r\nline4\nline5\n', expected: '\n' },
+    { input: 'line1\r\nline2\rline3\nline4\r\nline5\r\n', expected: '\r\n' },
+  ])('should handle mixed line endings', ({ input, expected }) => {
     expect(guessLineEndings(input, '"')).toBe(expected)
   })
 })

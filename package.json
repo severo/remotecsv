@@ -24,15 +24,15 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "tsdown",
+    "build": "tsdown --tsconfig=tsconfig.build.json",
     "coverage": "vitest run --coverage --project=node",
-    "dev": "tsdown --watch",
+    "dev": "tsdown --tsconfig=tsconfig.build.json --watch",
     "lint": "eslint .",
     "test:browser": "vitest run --project=browser",
     "test:node": "vitest run --project=node",
     "test:watch": "vitest",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit --project tsconfig.check.json"
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@eslint/compat": "1.4.1",
