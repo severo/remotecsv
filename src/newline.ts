@@ -35,7 +35,9 @@ export function guessLineEndings(input: string, quoteChar: string): Newline {
 
   const n = input.split('\n')
 
+  /* v8 ignore if -- @preserve */
   if (!(0 in r && 0 in n)) {
+    // assertion: it should not happen.
     throw new Error('r or n should have at least one element')
   }
   const nAppearsFirst = (n.length > 1 && n[0].length < r[0].length)
