@@ -71,8 +71,7 @@ export async function* parseUrl(
     }
 
     let consumedBytes = 0
-    for (const result of (options?.parseChunk ?? parseChunk)({
-      bytes,
+    for (const result of (options?.parseChunk ?? parseChunk)(bytes, {
       ignoreLastRow: true, // the remaining bytes may not contain a full last row
     })) {
       consumedBytes += result.meta.byteCount

@@ -1,3 +1,5 @@
+import { RECORD_SEP, UNIT_SEP } from '../src/constants.js'
+
 export const cases = [
   {
     description: 'One row',
@@ -599,4 +601,711 @@ export const CORE_PARSER_TESTS = [
     },
   },
 
+]
+
+export const PARSE_TESTS = [
+  {
+    description: 'Two rows, just \\r',
+    input: 'A,b,c\rd,E,f',
+    expected: {
+      data: [['A', 'b', 'c'], ['d', 'E', 'f']],
+      errors: [],
+    },
+  },
+  {
+    description: 'Two rows, \\r\\n',
+    input: 'A,b,c\r\nd,E,f',
+    expected: {
+      data: [['A', 'b', 'c'], ['d', 'E', 'f']],
+      errors: [],
+    },
+  },
+  {
+    description: 'Quoted field with \\r\\n',
+    input: 'A,"B\r\nB",C',
+    expected: {
+      data: [['A', 'B\r\nB', 'C']],
+      errors: [],
+    },
+  },
+  {
+    description: 'Quoted field with \\r',
+    input: 'A,"B\rB",C',
+    expected: {
+      data: [['A', 'B\rB', 'C']],
+      errors: [],
+    },
+  },
+  {
+    description: 'Quoted field with \\n',
+    input: 'A,"B\nB",C',
+    expected: {
+      data: [['A', 'B\nB', 'C']],
+      errors: [],
+    },
+  },
+  {
+    description: 'Quoted fields with spaces between closing quote and next delimiter',
+    input: 'A,"B" ,C,D\r\nE,F,"G"  ,H',
+    expected: {
+      data: [['A', 'B', 'C', 'D'], ['E', 'F', 'G', 'H']],
+      errors: [],
+    },
+  },
+  {
+    description: 'Quoted fields with spaces between closing quote and next new line',
+    input: 'A,B,C,"D" \r\nE,F,G,"H"  \r\nQ,W,E,R',
+    expected: {
+      data: [['A', 'B', 'C', 'D'], ['E', 'F', 'G', 'H'], ['Q', 'W', 'E', 'R']],
+      errors: [],
+    },
+  },
+  {
+    description: 'Quoted fields with spaces after closing quote',
+    input: 'A,"B" ,C,"D" \r\nE,F,"G"  ,"H"  \r\nQ,W,"E" ,R',
+    expected: {
+      data: [['A', 'B', 'C', 'D'], ['E', 'F', 'G', 'H'], ['Q', 'W', 'E', 'R']],
+      errors: [],
+    },
+  },
+  {
+    description: 'Misplaced quotes in data twice, not as opening quotes',
+    input: 'A,B",C\nD,E",F',
+    expected: {
+      data: [['A', 'B"', 'C'], ['D', 'E"', 'F']],
+      errors: [],
+    },
+  },
+  {
+    description: 'Mixed slash n and slash r should choose first as precident',
+    input: 'a,b,c\nd,e,f\rg,h,i\n',
+    expected: {
+      data: [['a', 'b', 'c'], ['d', 'e', 'f\rg', 'h', 'i'], ['']],
+      errors: [],
+    },
+  },
+  // TODO(SL): implement header: true?
+  // {
+  //   description: 'Header row with one row of data',
+  //   input: 'A,B,C\r\na,b,c',
+  //   config: { header: true },
+  //   expected: {
+  //     data: [{ A: 'a', B: 'b', C: 'c' }],
+  //     errors: [],
+  //   },
+  // },
+  // {
+  //   description: 'Header row only',
+  //   input: 'A,B,C',
+  //   config: { header: true },
+  //   expected: {
+  //     data: [],
+  //     errors: [],
+  //   },
+  // },
+  // {
+  //   description: 'Row with too few fields',
+  //   input: 'A,B,C\r\na,b',
+  //   config: { header: true },
+  //   expected: {
+  //     data: [{ A: 'a', B: 'b' }],
+  //     errors: [{
+  //       type: 'FieldMismatch',
+  //       code: 'TooFewFields',
+  //       message: 'Too few fields: expected 3 fields but parsed 2',
+  //       row: 0,
+  //     }],
+  //   },
+  // },
+  // {
+  //   description: 'Row with too many fields',
+  //   input: 'A,B,C\r\na,b,c,d,e\r\nf,g,h',
+  //   config: { header: true },
+  //   expected: {
+  //     data: [{ A: 'a', B: 'b', C: 'c', __parsed_extra: ['d', 'e'] }, { A: 'f', B: 'g', C: 'h' }],
+  //     errors: [{
+  //       type: 'FieldMismatch',
+  //       code: 'TooManyFields',
+  //       message: 'Too many fields: expected 3 fields but parsed 5',
+  //       row: 0,
+  //     }],
+  //   },
+  // },
+  {
+    description: 'Row with enough fields but blank field in the begining',
+    input: 'A,B,C\r\n,b1,c1\r\na2,b2,c2',
+    expected: {
+      data: [['A', 'B', 'C'], ['', 'b1', 'c1'], ['a2', 'b2', 'c2']],
+      errors: [],
+    },
+  },
+  // TODO(SL): implement header: true?
+  // {
+  //   description: 'Row with enough fields but blank field in the begining using headers',
+  //   input: 'A,B,C\r\n,b1,c1\r\n,b2,c2',
+  //   config: { header: true },
+  //   expected: {
+  //     data: [{ A: '', B: 'b1', C: 'c1' }, { A: '', B: 'b2', C: 'c2' }],
+  //     errors: [],
+  //   },
+  // },
+  // {
+  //   description: 'Row with enough fields but blank field at end',
+  //   input: 'A,B,C\r\na,b,',
+  //   config: { header: true },
+  //   expected: {
+  //     data: [{ A: 'a', B: 'b', C: '' }],
+  //     errors: [],
+  //   },
+  // },
+  // {
+  //   description: 'Line ends with quoted field, first field of next line is empty using headers',
+  //   input: 'a,b,"c"\r\nd,e,"f"\r\n,"h","i"\r\n,"k","l"',
+  //   config: {
+  //     header: true,
+  //     newline: '\r\n',
+  //   },
+  //   expected: {
+  //     data: [
+  //       { a: 'd', b: 'e', c: 'f' },
+  //       { a: '', b: 'h', c: 'i' },
+  //       { a: '', b: 'k', c: 'l' },
+  //     ],
+  //     errors: [],
+  //   },
+  // },
+  {
+    description: 'Tab delimiter',
+    input: 'a\tb\tc\r\nd\te\tf',
+    config: { delimiter: '\t' },
+    expected: {
+      data: [['a', 'b', 'c'], ['d', 'e', 'f']],
+      errors: [],
+    },
+  },
+  {
+    description: 'Pipe delimiter',
+    input: 'a|b|c\r\nd|e|f',
+    config: { delimiter: '|' },
+    expected: {
+      data: [['a', 'b', 'c'], ['d', 'e', 'f']],
+      errors: [],
+    },
+  },
+  {
+    description: 'ASCII 30 delimiter',
+    input: 'a' + RECORD_SEP + 'b' + RECORD_SEP + 'c\r\nd' + RECORD_SEP + 'e' + RECORD_SEP + 'f',
+    config: { delimiter: RECORD_SEP },
+    expected: {
+      data: [['a', 'b', 'c'], ['d', 'e', 'f']],
+      errors: [],
+    },
+  },
+  {
+    description: 'ASCII 31 delimiter',
+    input: 'a' + UNIT_SEP + 'b' + UNIT_SEP + 'c\r\nd' + UNIT_SEP + 'e' + UNIT_SEP + 'f',
+    config: { delimiter: UNIT_SEP },
+    expected: {
+      data: [['a', 'b', 'c'], ['d', 'e', 'f']],
+      errors: [],
+    },
+  },
+  // TODO(SL): silently default to comma?
+  // TODO(SL): or test it throws as expected?
+  // {
+  //   description: 'Bad delimiter (\\n)',
+  //   input: 'a,b,c',
+  //   config: { delimiter: '\n' },
+  //   notes: 'Should silently default to comma',
+  //   expected: {
+  //     data: [['a', 'b', 'c']],
+  //     errors: [],
+  //   },
+  // },
+  {
+    description: 'Multi-character delimiter',
+    input: 'a, b, c',
+    config: { delimiter: ', ' },
+    expected: {
+      data: [['a', 'b', 'c']],
+      errors: [],
+    },
+  },
+  {
+    description: 'Multi-character delimiter (length 2) with quoted field',
+    input: 'a, b, "c, e", d',
+    config: { delimiter: ', ' },
+    notes: 'The quotes must be immediately adjacent to the delimiter to indicate a quoted field',
+    expected: {
+      data: [['a', 'b', 'c, e', 'd']],
+      errors: [],
+    },
+  },
+  // {
+  //   description: 'Callback delimiter',
+  //   input: 'a$ b$ c',
+  //   config: { delimiter: function (input) { return input[1] + ' ' } },
+  //   expected: {
+  //     data: [['a', 'b', 'c']],
+  //     errors: [],
+  //   },
+  // },
+  {
+    description: 'Blank line at beginning',
+    input: '\r\na,b,c\r\nd,e,f',
+    config: { newline: '\r\n' },
+    expected: {
+      data: [[''], ['a', 'b', 'c'], ['d', 'e', 'f']],
+      errors: [],
+    },
+  },
+  {
+    description: 'Blank line in middle',
+    input: 'a,b,c\r\n\r\nd,e,f',
+    config: { newline: '\r\n' },
+    expected: {
+      data: [['a', 'b', 'c'], [''], ['d', 'e', 'f']],
+      errors: [],
+    },
+  },
+  {
+    description: 'Blank lines at end',
+    input: 'a,b,c\nd,e,f\n\n',
+    expected: {
+      data: [['a', 'b', 'c'], ['d', 'e', 'f'], [''], ['']],
+      errors: [],
+    },
+  },
+  {
+    description: 'Blank line in middle with whitespace',
+    input: 'a,b,c\r\n \r\nd,e,f',
+    expected: {
+      data: [['a', 'b', 'c'], [' '], ['d', 'e', 'f']],
+      errors: [],
+    },
+  },
+  {
+    description: 'First field of a line is empty',
+    input: 'a,b,c\r\n,e,f',
+    expected: {
+      data: [['a', 'b', 'c'], ['', 'e', 'f']],
+      errors: [],
+    },
+  },
+  {
+    description: 'Last field of a line is empty',
+    input: 'a,b,\r\nd,e,f',
+    expected: {
+      data: [['a', 'b', ''], ['d', 'e', 'f']],
+      errors: [],
+    },
+  },
+  {
+    description: 'Other fields are empty',
+    input: 'a,,c\r\n,,',
+    expected: {
+      data: [['a', '', 'c'], ['', '', '']],
+      errors: [],
+    },
+  },
+  {
+    description: 'Empty input string',
+    input: '',
+    expected: {
+      data: [],
+      errors: [],
+    },
+  },
+  {
+    description: 'Input is just the delimiter (2 empty fields)',
+    input: ',',
+    expected: {
+      data: [['', '']],
+      errors: [],
+    },
+  },
+  {
+    description: 'Input is just a string (a single field)',
+    input: 'Abc def',
+    expected: {
+      data: [['Abc def']],
+      errors: [
+        {
+          type: 'Delimiter',
+          code: 'UndetectableDelimiter',
+          message: 'Unable to auto-detect delimiting character; defaulted to \',\'',
+        },
+      ],
+    },
+  },
+  {
+    description: 'Empty lines',
+    input: '\na,b,c\n\nd,e,f\n\n',
+    config: { delimiter: ',' },
+    expected: {
+      data: [[''], ['a', 'b', 'c'], [''], ['d', 'e', 'f'], [''], ['']],
+      errors: [],
+    },
+  },
+  {
+    description: 'Skip empty lines',
+    input: 'a,b,c\n\nd,e,f',
+    config: { skipEmptyLines: true },
+    expected: {
+      data: [['a', 'b', 'c'], ['d', 'e', 'f']],
+      errors: [],
+    },
+  },
+  {
+    description: 'Skip empty lines, with newline at end of input',
+    input: 'a,b,c\r\n\r\nd,e,f\r\n',
+    config: { skipEmptyLines: true },
+    expected: {
+      data: [['a', 'b', 'c'], ['d', 'e', 'f']],
+      errors: [],
+    },
+  },
+  {
+    description: 'Skip empty lines, with empty input',
+    input: '',
+    config: { skipEmptyLines: true },
+    expected: {
+      data: [],
+      errors: [],
+    },
+  },
+  {
+    description: 'Skip empty lines, with first line only whitespace',
+    notes: 'A line must be absolutely empty to be considered empty',
+    input: ' \na,b,c',
+    config: { skipEmptyLines: true, delimiter: ',' },
+    expected: {
+      data: [[' '], ['a', 'b', 'c']],
+      errors: [],
+    },
+  },
+  // TODO(SL): implement header: true?
+  // {
+  //   description: 'Skip empty lines while detecting delimiter',
+  //   notes: 'Parsing correctly newline-terminated short data with delimiter:auto and skipEmptyLines:true',
+  //   input: 'a,b\n1,2\n3,4\n',
+  //   config: { header: true, skipEmptyLines: true },
+  //   expected: {
+  //     data: [{ a: '1', b: '2' }, { a: '3', b: '4' }],
+  //     errors: [],
+  //   },
+  // },
+  {
+    description: 'Lines with comments are not used when guessing the delimiter in an escaped file',
+    notes: 'Guessing the delimiter should work even if there are many lines of comments at the start of the file',
+    input: '#1\n#2\n#3\n#4\n#5\n#6\n#7\n#8\n#9\n#10\none,"t,w,o",three\nfour,five,six',
+    config: { comments: '#' },
+    expected: {
+      data: [['one', 't,w,o', 'three'], ['four', 'five', 'six']],
+      errors: [],
+    },
+  },
+  {
+    description: 'Lines with comments are not used when guessing the delimiter in a non-escaped file',
+    notes: 'Guessing the delimiter should work even if there are many lines of comments at the start of the file',
+    input: '#1\n#2\n#3\n#4\n#5\n#6\n#7\n#8\n#9\n#10\n#11\none,two,three\nfour,five,six',
+    config: { comments: '#' },
+    expected: {
+      data: [['one', 'two', 'three'], ['four', 'five', 'six']],
+      errors: [],
+    },
+  },
+  {
+    description: 'Pipe delimiter is guessed correctly when mixed with comas',
+    notes: 'Guessing the delimiter should work even if there are many lines of comments at the start of the file',
+    input: 'one|two,two|three\nfour|five,five|six',
+    config: {},
+    expected: {
+      data: [['one', 'two,two', 'three'], ['four', 'five,five', 'six']],
+      errors: [],
+    },
+  },
+  {
+    description: 'Pipe delimiter is guessed correctly choose avgFildCount max one',
+    notes: 'Guessing the delimiter should work choose the min delta one and the max one',
+    config: {},
+    input: 'a,b,c\na,b,c|d|e|f',
+    expected: {
+      data: [['a', 'b', 'c'], ['a', 'b', 'c|d|e|f']],
+      errors: [],
+    },
+  },
+  {
+    description: 'Pipe delimiter is guessed correctly when first field are enclosed in quotes and contain delimiter characters',
+    notes: 'Guessing the delimiter should work if the first field is enclosed in quotes, but others are not',
+    input: '"Field1,1,1";Field2;"Field3";Field4;Field5;Field6',
+    config: {},
+    expected: {
+      data: [['Field1,1,1', 'Field2', 'Field3', 'Field4', 'Field5', 'Field6']],
+      errors: [],
+    },
+  },
+  {
+    description: 'Pipe delimiter is guessed correctly when some fields are enclosed in quotes and contain delimiter characters and escaoped quotes',
+    notes: 'Guessing the delimiter should work even if the first field is not enclosed in quotes, but others are',
+    input: 'Field1;Field2;"Field,3,""3,3";Field4;Field5;"Field6,6"',
+    config: {},
+    expected: {
+      data: [['Field1', 'Field2', 'Field,3,"3,3', 'Field4', 'Field5', 'Field6,6']],
+      errors: [],
+    },
+  },
+  {
+    description: 'Single quote as quote character',
+    notes: 'Must parse correctly when single quote is specified as a quote character',
+    input: 'a,b,\'c,d\'',
+    config: { quoteChar: '\'' },
+    expected: {
+      data: [['a', 'b', 'c,d']],
+      errors: [],
+    },
+  },
+  {
+    description: 'Custom escape character in the middle',
+    notes: 'Must parse correctly if the backslash sign (\\) is configured as a custom escape character',
+    input: 'a,b,"c\\"d\\"f"',
+    config: { escapeChar: '\\' },
+    expected: {
+      data: [['a', 'b', 'c"d"f']],
+      errors: [],
+    },
+  },
+  {
+    description: 'Custom escape character at the end',
+    notes: 'Must parse correctly if the backslash sign (\\) is configured as a custom escape character and the escaped quote character appears at the end of the column',
+    input: 'a,b,"c\\"d\\""',
+    config: { escapeChar: '\\' },
+    expected: {
+      data: [['a', 'b', 'c"d"']],
+      errors: [],
+    },
+  },
+  {
+    description: 'Custom escape character not used for escaping',
+    notes: 'Must parse correctly if the backslash sign (\\) is configured as a custom escape character and appears as regular character in the text',
+    input: 'a,b,"c\\d"',
+    config: { escapeChar: '\\' },
+    expected: {
+      data: [['a', 'b', 'c\\d']],
+      errors: [],
+    },
+  },
+  // TODO(SL): implement header: true?
+  // {
+  //   description: 'Header row with preceding comment',
+  //   notes: 'Must parse correctly headers if they are preceded by comments',
+  //   input: '#Comment\na,b\nc,d\n',
+  //   config: { header: true, comments: '#', skipEmptyLines: true, delimiter: ',' },
+  //   expected: {
+  //     data: [{ a: 'c', b: 'd' }],
+  //     errors: [],
+  //   },
+  // },
+  {
+    description: 'Carriage return in header inside quotes, with line feed endings',
+    input: '"a\r\na","b"\n"c","d"\n"e","f"\n"g","h"\n"i","j"',
+    config: {},
+    expected: {
+      data: [['a\r\na', 'b'], ['c', 'd'], ['e', 'f'], ['g', 'h'], ['i', 'j']],
+      errors: [],
+    },
+  },
+  {
+    description: 'Line feed in header inside quotes, with carriage return + line feed endings',
+    input: '"a\na","b"\r\n"c","d"\r\n"e","f"\r\n"g","h"\r\n"i","j"',
+    config: {},
+    expected: {
+      data: [['a\na', 'b'], ['c', 'd'], ['e', 'f'], ['g', 'h'], ['i', 'j']],
+      errors: [],
+    },
+  },
+  {
+    description: 'Using \\r\\n endings uses \\r\\n linebreak',
+    input: 'a,b\r\nc,d\r\ne,f\r\ng,h\r\ni,j',
+    config: {},
+    expected: {
+      data: [['a', 'b'], ['c', 'd'], ['e', 'f'], ['g', 'h'], ['i', 'j']],
+      errors: [],
+      meta: {
+        linebreak: '\r\n',
+        delimiter: ',',
+        cursor: 23,
+        aborted: false,
+        renamedHeaders: null,
+      },
+    },
+  },
+  {
+    description: 'Using \\n endings uses \\n linebreak',
+    input: 'a,b\nc,d\ne,f\ng,h\ni,j',
+    config: {},
+    expected: {
+      data: [['a', 'b'], ['c', 'd'], ['e', 'f'], ['g', 'h'], ['i', 'j']],
+      errors: [],
+      meta: {
+        linebreak: '\n',
+        delimiter: ',',
+        cursor: 19,
+        aborted: false,
+        renamedHeaders: null,
+      },
+    },
+  },
+  {
+    description: 'Using \\r\\n endings with \\r\\n in header field uses \\r\\n linebreak',
+    input: '"a\r\na",b\r\nc,d\r\ne,f\r\ng,h\r\ni,j',
+    config: {},
+    expected: {
+      data: [['a\r\na', 'b'], ['c', 'd'], ['e', 'f'], ['g', 'h'], ['i', 'j']],
+      errors: [],
+      meta: {
+        linebreak: '\r\n',
+        delimiter: ',',
+        cursor: 28,
+        aborted: false,
+        renamedHeaders: null,
+      },
+    },
+  },
+  {
+    description: 'Using \\r\\n endings with \\n in header field uses \\r\\n linebreak',
+    input: '"a\na",b\r\nc,d\r\ne,f\r\ng,h\r\ni,j',
+    config: {},
+    expected: {
+      data: [['a\na', 'b'], ['c', 'd'], ['e', 'f'], ['g', 'h'], ['i', 'j']],
+      errors: [],
+      meta: {
+        linebreak: '\r\n',
+        delimiter: ',',
+        cursor: 27,
+        aborted: false,
+        renamedHeaders: null,
+      },
+    },
+  },
+  {
+    description: 'Using \\r\\n endings with \\n in header field with skip empty lines uses \\r\\n linebreak',
+    input: '"a\na",b\r\nc,d\r\ne,f\r\ng,h\r\ni,j\r\n',
+    config: { skipEmptyLines: true },
+    expected: {
+      data: [['a\na', 'b'], ['c', 'd'], ['e', 'f'], ['g', 'h'], ['i', 'j']],
+      errors: [],
+      meta: {
+        linebreak: '\r\n',
+        delimiter: ',',
+        cursor: 29,
+        aborted: false,
+        renamedHeaders: null,
+      },
+    },
+  },
+  {
+    description: 'Using \\n endings with \\r\\n in header field uses \\n linebreak',
+    input: '"a\r\na",b\nc,d\ne,f\ng,h\ni,j',
+    config: {},
+    expected: {
+      data: [['a\r\na', 'b'], ['c', 'd'], ['e', 'f'], ['g', 'h'], ['i', 'j']],
+      errors: [],
+      meta: {
+        linebreak: '\n',
+        delimiter: ',',
+        cursor: 24,
+        aborted: false,
+        renamedHeaders: null,
+      },
+    },
+  },
+  {
+    description: 'Using reserved regex character . as quote character',
+    input: '.a\na.,b\r\nc,d\r\ne,f\r\ng,h\r\ni,j',
+    config: { quoteChar: '.' },
+    expected: {
+      data: [['a\na', 'b'], ['c', 'd'], ['e', 'f'], ['g', 'h'], ['i', 'j']],
+      errors: [],
+      meta: {
+        linebreak: '\r\n',
+        delimiter: ',',
+        cursor: 27,
+        aborted: false,
+        renamedHeaders: null,
+      },
+    },
+  },
+  {
+    description: 'Using reserved regex character | as quote character',
+    input: '|a\na|,b\r\nc,d\r\ne,f\r\ng,h\r\ni,j',
+    config: { quoteChar: '|' },
+    expected: {
+      data: [['a\na', 'b'], ['c', 'd'], ['e', 'f'], ['g', 'h'], ['i', 'j']],
+      errors: [],
+      meta: {
+        linebreak: '\r\n',
+        delimiter: ',',
+        cursor: 27,
+        aborted: false,
+        renamedHeaders: null,
+      },
+    },
+  },
+  {
+    description: 'UTF-8 BOM encoded input is stripped from invisible BOM character',
+    input: '\ufeffA,B\nX,Y',
+    config: {},
+    expected: {
+      data: [['A', 'B'], ['X', 'Y']],
+      errors: [],
+    },
+  },
+  // TODO(SL): implement header: true?
+  // {
+  //   description: 'UTF-8 BOM encoded input with header produces column key stripped from invisible BOM character',
+  //   input: '\ufeffA,B\nX,Y',
+  //   config: { header: true },
+  //   expected: {
+  //     data: [{ A: 'X', B: 'Y' }],
+  //     errors: [],
+  //   },
+  // },
+  {
+    description: 'Parsing with skipEmptyLines set to \'greedy\'',
+    notes: 'Must parse correctly without lines with no content',
+    // eslint-disable-next-line @stylistic/no-tabs
+    input: 'a,b\n\n,\nc,d\n , \n""," "\n	,	\n,,,,\n',
+    config: { skipEmptyLines: 'greedy' as const },
+    expected: {
+      data: [['a', 'b'], ['c', 'd']],
+      errors: [],
+    },
+  },
+  {
+    description: 'Parsing with skipEmptyLines set to \'greedy\' with quotes and delimiters as content',
+    notes: 'Must include lines with escaped delimiters and quotes',
+    input: 'a,b\n\n,\nc,d\n" , ",","\n""" """,""""""\n\n\n',
+    config: { skipEmptyLines: 'greedy' as const },
+    expected: {
+      data: [['a', 'b'], ['c', 'd'], [' , ', ','], ['" "', '""']],
+      errors: [],
+    },
+  },
+  {
+    description: 'Quoted fields with spaces between closing quote and next delimiter and contains delimiter',
+    input: 'A,",B" ,C,D\nE,F,G,H',
+    expected: {
+      data: [['A', ',B', 'C', 'D'], ['E', 'F', 'G', 'H']],
+      errors: [],
+    },
+  },
+  {
+    description: 'Quoted fields with spaces between closing quote and newline and contains newline',
+    input: 'a,b,"c\n" \nd,e,f',
+    expected: {
+      data: [['a', 'b', 'c\n'], ['d', 'e', 'f']],
+      errors: [],
+    },
+  },
 ]

@@ -4,7 +4,7 @@ import type { ParseResult } from '../src/types'
 import { parseUrl } from '../src/url'
 import { toUrl } from '../src/utils'
 
-function* parseChunkMock({ bytes }: { bytes: Uint8Array }): Generator<ParseResult, void, unknown> {
+function* parseChunkMock(bytes: Uint8Array): Generator<ParseResult, void, unknown> {
   const decoder = new TextDecoder('utf-8')
   const decoded = decoder.decode(bytes)
   yield {
@@ -94,7 +94,7 @@ describe('parseUrl', () => {
   it('keeps bytes between iterations, and might not consume all the bytes', async () => {
     const text = 'hello, csvremote!!!'
     const { url, fileSize, revoke } = toUrl(text)
-    function* parseChunkMock({ bytes }: { bytes: Uint8Array }) {
+    function* parseChunkMock(bytes: Uint8Array) {
       // only yield the first two bytes, decoded as text
       const decoder = new TextDecoder('utf-8')
       const slice = bytes.slice(0, 2)
@@ -133,7 +133,7 @@ describe('parseUrl', () => {
   it('keeps bytes between iterations and might consume all the bytes', async () => {
     const text = 'hello, csvremote!!!'
     const { url, fileSize, revoke } = toUrl(text)
-    function* parseChunkMock({ bytes }: { bytes: Uint8Array }) {
+    function* parseChunkMock(bytes: Uint8Array) {
       // only process up to the first comma
       const decoder = new TextDecoder('utf-8')
       const text = decoder.decode(bytes)
@@ -182,7 +182,7 @@ describe('parseUrl', () => {
   it('throws if parseChunk yields more bytes than provided', async () => {
     const text = 'hello, csvremote!!!'
     const { url, revoke } = toUrl(text)
-    function* parseChunkMock({ bytes }: { bytes: Uint8Array }) {
+    function* parseChunkMock(bytes: Uint8Array) {
       // yield more bytes than provided
       yield {
         row: [],

@@ -9,8 +9,8 @@ import { testEmptyLine } from './utils'
 
 /**
  * Parses a chunk of bytes into CSV data.
+ * @param bytes The chunk of bytes to parse.
  * @param options Options for parsing the chunk.
- * @param options.bytes The chunk of bytes to parse.
  * @param options.delimiter The delimiter used in the CSV data. Defaults to ','.
  * @param options.newline The newline used in the CSV data. Defaults to '\n'.
  * @param options.quoteChar The quote character used in the CSV data. Defaults to '"'.
@@ -22,27 +22,26 @@ import { testEmptyLine } from './utils'
  * @yields Parsed data and metadata.
  * @returns A generator yielding parsed data and metadata.
  */
-export function* parseChunk({
-  bytes,
-  delimiter,
-  newline,
-  quoteChar,
-  escapeChar,
-  comments,
-  delimitersToGuess,
-  skipEmptyLines,
-  ignoreLastRow,
-}: {
-  bytes: Uint8Array
-  delimiter?: string
-  newline?: string
-  quoteChar?: string
-  escapeChar?: string
-  comments?: boolean | string
-  delimitersToGuess?: string[]
-  skipEmptyLines?: boolean | 'greedy'
-  ignoreLastRow?: boolean
-}): Generator<ParseResult, void, unknown> {
+export function* parseChunk(bytes: Uint8Array,
+  {
+    delimiter,
+    newline,
+    quoteChar,
+    escapeChar,
+    comments,
+    delimitersToGuess,
+    skipEmptyLines,
+    ignoreLastRow,
+  }: {
+    delimiter?: string
+    newline?: string
+    quoteChar?: string
+    escapeChar?: string
+    comments?: boolean | string
+    delimitersToGuess?: string[]
+    skipEmptyLines?: boolean | 'greedy'
+    ignoreLastRow?: boolean
+  } = {}): Generator<ParseResult, void, unknown> {
   const decoder = new TextDecoder('utf-8')
   const input = decoder.decode(bytes)
 

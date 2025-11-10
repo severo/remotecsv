@@ -3,6 +3,20 @@ import { describe, expect, it } from 'vitest'
 import { parse, validateOptions } from '../src/parser'
 import { CORE_PARSER_TESTS } from './cases'
 
+describe('Core parser tests', () => {
+  CORE_PARSER_TESTS.forEach((test) => {
+    it(test.description, () => {
+      const config = test.config || {}
+      const result = [...parse(test.input, config)]
+      const data = result.map(({ row }) => row)
+      const errors = result.flatMap(({ errors: rowErrors }, row) => rowErrors.map(error => ({ ...error, row })))
+      expect(data).toEqual(test.expected.data)
+      expect(errors).toEqual(test.expected.errors)
+      // TODO(SL): meta test
+    })
+  })
+})
+
 describe('validateOptions', () => {
   it('should set default values for missing options', () => {
     const options = validateOptions({})
@@ -40,19 +54,5 @@ describe('validateOptions', () => {
     expect(options.escapeChar).toBe('\'')
     expect(options.comments).toBe('//')
     expect(options.ignoreLastRow).toBe(false)
-  })
-})
-
-describe('Core parser tests', () => {
-  CORE_PARSER_TESTS.forEach((test) => {
-    it(test.description, () => {
-      const config = test.config || {}
-      const result = [...parse(test.input, config)]
-      const data = result.map(({ row }) => row)
-      const errors = result.flatMap(({ errors: rowErrors }, row) => rowErrors.map(error => ({ ...error, row })))
-      expect(data).toEqual(test.expected.data)
-      expect(errors).toEqual(test.expected.errors)
-      // TODO(SL): meta test
-    })
   })
 })
