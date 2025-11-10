@@ -30,6 +30,7 @@
     "lint": "eslint .",
     "test:browser": "vitest run --project=browser",
     "test:node": "vitest run --project=node",
+    "test:ui": "vitest --coverage --project=node --ui",
     "test:watch": "vitest",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
@@ -41,6 +42,7 @@
     "@types/node": "24.10.0",
     "@vitest/browser-playwright": "4.0.7",
     "@vitest/coverage-v8": "4.0.7",
+    "@vitest/ui": "4.0.7",
     "bumpp": "10.3.1",
     "eslint": "9.39.1",
     "eslint-plugin-jsdoc": "^61.1.12",
