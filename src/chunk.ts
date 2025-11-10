@@ -1,5 +1,6 @@
 import { DefaultDelimiter } from './constants'
 import { guessDelimiter, validateDelimiter } from './delimiter'
+import { validateEscapeChar } from './escapeChar'
 import { guessLineEndings, validateNewline } from './newline'
 import { parse } from './parser'
 import { validateQuoteChar } from './quoteChar'
@@ -13,6 +14,7 @@ import { testEmptyLine } from './utils'
  * @param options.delimiter The delimiter used in the CSV data. Defaults to ','.
  * @param options.newline The newline used in the CSV data. Defaults to '\n'.
  * @param options.quoteChar The quote character used in the CSV data. Defaults to '"'.
+ * @param options.escapeChar The escape character used in the CSV data. Defaults to the quote character.
  * @param options.comments The comment character or boolean to indicate comments
  * @param options.delimitersToGuess The list of delimiters to guess from
  * @param options.skipEmptyLines Whether to skip empty lines, if so, whether 'greedy' or not. Defaults to false.
@@ -25,6 +27,7 @@ export function* parseChunk({
   delimiter,
   newline,
   quoteChar,
+  escapeChar,
   comments,
   delimitersToGuess,
   skipEmptyLines,
@@ -34,6 +37,7 @@ export function* parseChunk({
   delimiter?: string
   newline?: string
   quoteChar?: string
+  escapeChar?: string
   comments?: boolean | string
   delimitersToGuess?: string[]
   skipEmptyLines?: boolean | 'greedy'
@@ -44,6 +48,7 @@ export function* parseChunk({
 
   skipEmptyLines ??= false
   quoteChar = validateQuoteChar(quoteChar)
+  escapeChar = validateEscapeChar(escapeChar) ?? quoteChar
   newline = validateNewline(newline) ?? guessLineEndings(input, quoteChar)
 
   let delimiterError = false
@@ -62,9 +67,9 @@ export function* parseChunk({
     delimiter,
     newline,
     quoteChar,
+    escapeChar,
     ignoreLastRow,
     comments,
-    // TODO(SL): add escapeChar?
   })) {
     if (delimiterError) {
       result.errors.push({

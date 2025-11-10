@@ -1,6 +1,7 @@
 // Adapted from PapaParse (https://www.papaparse.com/)
 import { validateComments } from './comments'
 import { validateDelimiter } from './delimiter'
+import { validateEscapeChar } from './escapeChar'
 import { validateNewline } from './newline'
 import { validateQuoteChar } from './quoteChar'
 import type { ParseError, ParseResult } from './types'
@@ -28,9 +29,9 @@ export interface ValidParseOptions {
  * @param options The options to validate
  * @returns The validated options
  */
-function validateOptions(options: ParseOptions): ValidParseOptions {
+export function validateOptions(options: ParseOptions): ValidParseOptions {
   const quoteChar = validateQuoteChar(options.quoteChar)
-  const escapeChar = options.escapeChar ?? quoteChar
+  const escapeChar = validateEscapeChar(options.escapeChar) ?? quoteChar
 
   // Delimiter must be valid
   // TODO(SL): it now throws if invalid delimiter is provided instead of defaulting to ,
