@@ -105,4 +105,10 @@ describe('guessDelimiter', () => {
     const result = guessDelimiter(input)
     expect(result.bestDelimiter).toBe(',')
   })
+
+  it('should only use the first 10 non-empty lines for guessing', () => {
+    const input = 'a,b,c\n1,1,1\n2,2,2\n3,3,3\n4,4,4\n5,5,5\n6,6,6\n' + 'x|y|z\n'.repeat(30)
+    const result = guessDelimiter(input)
+    expect(result.bestDelimiter).toBe(',')
+  })
 })
