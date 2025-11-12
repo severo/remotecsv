@@ -1,8 +1,17 @@
 import { checkNonNegativeInteger, checkStrictlyPositiveInteger } from './check'
-import { parseChunk } from './chunk'
+import { parseChunk, type ParseChunkOptions } from './chunk'
 import { defaultChunkSize } from './constants'
 import { fetchChunk } from './fetch'
 import type { ParseResult } from './types'
+
+interface ParseUrlOptions extends ParseChunkOptions {
+  chunkSize?: number
+  firstByte?: number
+  lastByte?: number
+  requestInit?: RequestInit
+  fetchChunk?: typeof fetchChunk
+  parseChunk?: typeof parseChunk
+}
 
 /**
  * Parses a remote text file in chunks using HTTP range requests.
@@ -19,19 +28,12 @@ import type { ParseResult } from './types'
  */
 export async function* parseUrl(
   url: string,
-  options?: {
-    chunkSize?: number
-    firstByte?: number
-    lastByte?: number
-    requestInit?: RequestInit
-    fetchChunk?: typeof fetchChunk
-    parseChunk?: typeof parseChunk
-  },
+  options: ParseUrlOptions = {},
 ): AsyncGenerator<ParseResult, void, unknown> {
-  const chunkSize = checkStrictlyPositiveInteger(options?.chunkSize) ?? defaultChunkSize
+  const chunkSize = checkStrictlyPositiveInteger(options.chunkSize) ?? defaultChunkSize
   // TODO(SL): should we accept negative values (from the end)?
-  let firstByte = checkNonNegativeInteger(options?.firstByte) ?? 0
-  let lastByte = checkNonNegativeInteger(options?.lastByte)
+  let firstByte = checkNonNegativeInteger(options.firstByte) ?? 0
+  let lastByte = checkNonNegativeInteger(options.lastByte)
   if (lastByte !== undefined && lastByte < firstByte) {
     throw new Error('lastByte must be greater than firstByte')
   }
@@ -39,12 +41,12 @@ export async function* parseUrl(
   let cursor = firstByte
   let bytes: Uint8Array<ArrayBufferLike> = new Uint8Array(0)
   while (true) {
-    const { bytes: chunkBytes, fileSize } = await (options?.fetchChunk ?? fetchChunk)({
+    const { bytes: chunkBytes, fileSize } = await (options.fetchChunk ?? fetchChunk)({
       url,
       chunkSize,
       firstByte,
       maxLastByte: lastByte,
-      requestInit: options?.requestInit,
+      requestInit: options.requestInit,
     })
 
     // Update lastByte in case it is undefined or greater than the file size
@@ -71,8 +73,16 @@ export async function* parseUrl(
     }
 
     let consumedBytes = 0
-    for (const result of (options?.parseChunk ?? parseChunk)(bytes, {
+    for (const result of (options.parseChunk ?? parseChunk)(bytes, {
       ignoreLastRow: true, // the remaining bytes may not contain a full last row
+      // pass other options
+      delimiter: options.delimiter,
+      newline: options.newline,
+      quoteChar: options.quoteChar,
+      escapeChar: options.escapeChar,
+      comments: options.comments,
+      delimitersToGuess: options.delimitersToGuess,
+      skipEmptyLines: options.skipEmptyLines,
     })) {
       consumedBytes += result.meta.byteCount
       if (consumedBytes > bytes.length) {
@@ -93,16 +103,38 @@ export async function* parseUrl(
     cursor += consumedBytes
     firstByte += chunkSize
 
-    if (firstByte > lastByte) {
-      break
-    }
-    /* v8 ignore if -- @preserve */
-    if (cursor + bytes.length !== firstByte) {
+    if (firstByte <= lastByte) {
+      /* v8 ignore if -- @preserve */
+      if (cursor + bytes.length !== firstByte) {
       // assertion: it should not happen.
-      throw new Error('Invalid state: non-contiguous offsets')
+        throw new Error('Invalid state: non-contiguous offsets')
+      }
+      continue
     }
+
+    break
   }
 
-  // TODO(SL): What to do with remaining bytes? For now, ignore them.
-  // call again with ignoreLastRow: false for the remaining bytes?
+  // Parse remaining bytes, if any
+  if (bytes.length > 0) {
+    for (const result of (options.parseChunk ?? parseChunk)(bytes, {
+      ignoreLastRow: false,
+      // pass other options
+      delimiter: options.delimiter,
+      newline: options.newline,
+      quoteChar: options.quoteChar,
+      escapeChar: options.escapeChar,
+      comments: options.comments,
+      delimitersToGuess: options.delimitersToGuess,
+      skipEmptyLines: options.skipEmptyLines,
+    })) {
+      yield {
+        ...result,
+        meta: {
+          ...result.meta,
+          offset: result.meta.offset + cursor,
+        },
+      }
+    }
+  }
 }

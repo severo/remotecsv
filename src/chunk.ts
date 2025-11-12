@@ -7,6 +7,16 @@ import { validateQuoteChar } from './quoteChar'
 import type { ParseResult } from './types'
 import { testEmptyLine } from './utils'
 
+export interface ParseChunkOptions {
+  delimiter?: string
+  newline?: string
+  quoteChar?: string
+  escapeChar?: string
+  comments?: boolean | string
+  delimitersToGuess?: string[]
+  skipEmptyLines?: boolean | 'greedy'
+}
+
 /**
  * Parses a chunk of bytes into CSV data.
  * @param bytes The chunk of bytes to parse.
@@ -32,14 +42,7 @@ export function* parseChunk(bytes: Uint8Array,
     delimitersToGuess,
     skipEmptyLines,
     ignoreLastRow,
-  }: {
-    delimiter?: string
-    newline?: string
-    quoteChar?: string
-    escapeChar?: string
-    comments?: boolean | string
-    delimitersToGuess?: string[]
-    skipEmptyLines?: boolean | 'greedy'
+  }: ParseChunkOptions & {
     ignoreLastRow?: boolean
   } = {}): Generator<ParseResult, void, unknown> {
   const decoder = new TextDecoder('utf-8')
