@@ -1,14 +1,15 @@
 /**
  * Throws if the provided value is not a strictly positive integer. Undefined is allowed.
  * @param value The desired value.
+ * @param minValue The minimum value (inclusive).
  * @returns The validated value: a strictly positive integer, or undefined.
  */
-export function checkStrictlyPositiveInteger(value?: number): number | undefined {
+export function checkIntegerGreaterOrEqualThan(value: number | undefined, minValue: number): number | undefined {
   if (
     value === undefined
     || (
       Number.isInteger(value)
-      && value > 0
+      && value >= minValue
     )
   ) {
     return value

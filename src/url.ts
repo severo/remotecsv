@@ -1,4 +1,4 @@
-import { checkNonNegativeInteger, checkStrictlyPositiveInteger } from './check'
+import { checkIntegerGreaterOrEqualThan } from './check'
 import { parseChunk, type ParseChunkOptions } from './chunk'
 import { defaultChunkSize } from './constants'
 import { fetchChunk } from './fetch'
@@ -30,13 +30,10 @@ export async function* parseUrl(
   url: string,
   options: ParseUrlOptions = {},
 ): AsyncGenerator<ParseResult, void, unknown> {
-  const chunkSize = checkStrictlyPositiveInteger(options.chunkSize) ?? defaultChunkSize
+  const chunkSize = checkIntegerGreaterOrEqualThan(options.chunkSize, 1) ?? defaultChunkSize
   // TODO(SL): should we accept negative values (from the end)?
-  let firstByte = checkNonNegativeInteger(options.firstByte) ?? 0
-  let lastByte = checkNonNegativeInteger(options.lastByte)
-  if (lastByte !== undefined && lastByte < firstByte) {
-    throw new Error('lastByte must be greater than firstByte')
-  }
+  let firstByte = checkIntegerGreaterOrEqualThan(options.firstByte, 0) ?? 0
+  let lastByte = checkIntegerGreaterOrEqualThan(options.lastByte, -1)
 
   let cursor = firstByte
   let bytes: Uint8Array<ArrayBufferLike> = new Uint8Array(0)
