@@ -71,10 +71,11 @@ describe('parseUrl, while mocking parseChunk, ', () => {
     [-1, undefined],
     [NaN, undefined],
     [Infinity, undefined],
-    [0, -1],
     [0, NaN],
     [0, Infinity],
-    [5, 0],
+    [0, -2],
+    // [0, -1], // now allowed
+    // [5, 0], // now allowed
   ])('throws for invalid from: %s or lastByte: %s', async (firstByte, lastByte) => {
     const text = 'hello, csvremote!!!'
     const { url, revoke } = toUrl(text)
