@@ -53,8 +53,8 @@ describe('toUrl', () => {
 
 describe('escapeRegExp', () => {
   it('escapes special regex characters', () => {
-    const input = 'Hello. How are you? (I hope you\'re well!) *$^+[]{}|\\'
-    const escaped = escapeRegExp(input)
+    const text = 'Hello. How are you? (I hope you\'re well!) *$^+[]{}|\\'
+    const escaped = escapeRegExp(text)
     expect(escaped).toBe('Hello\\. How are you\\? \\(I hope you\'re well!\\) \\*\\$\\^\\+\\[\\]\\{\\}\\|\\\\')
   })
 })

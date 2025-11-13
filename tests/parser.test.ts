@@ -7,7 +7,7 @@ describe('Papaparse core parser tests', () => {
   CORE_PARSER_TESTS.forEach((test) => {
     it(test.description, () => {
       const config = test.config || {}
-      const result = [...parse(test.input, config)]
+      const result = [...parse(test.text, config)]
       const data = result.map(({ row }) => row)
       const errors = result.flatMap(({ errors: rowErrors }, row) => rowErrors.map(error => ({ ...error, row })))
       expect(data).toEqual(test.expected.data)
@@ -19,9 +19,9 @@ describe('Papaparse core parser tests', () => {
 
 describe('parse', () => {
   it('should not parse the last row if ignoreLastRow is true', () => {
-    const input = 'a,b,c\n1,2,3\n4,5,6\n7,8,9'
+    const text = 'a,b,c\n1,2,3\n4,5,6\n7,8,9'
     const config = { ignoreLastRow: true }
-    const result = [...parse(input, config)]
+    const result = [...parse(text, config)]
     const data = result.map(({ row }) => row)
     expect(data).toEqual([
       ['a', 'b', 'c'],
@@ -31,8 +31,8 @@ describe('parse', () => {
   })
 
   it.each([undefined, true, false])('should respect the stripBOM option (%s), and count the bytes correctly', (stripBOM) => {
-    const input = '\ufeffA,B\nX,Y'
-    const result = [...parse(input, { stripBOM })]
+    const text = '\ufeffA,B\nX,Y'
+    const result = [...parse(text, { stripBOM })]
     const data = result.map(({ row }) => row)
     const meta = result.map(({ meta }) => meta)
     expect(data).toEqual([
@@ -44,8 +44,8 @@ describe('parse', () => {
   })
 
   it('should not strip BOM if not at the start', () => {
-    const input = 'A\ufeff,B\nX,Y'
-    const result = [...parse(input, { stripBOM: true })]
+    const text = 'A\ufeff,B\nX,Y'
+    const result = [...parse(text, { stripBOM: true })]
     const data = result.map(({ row }) => row)
     const meta = result.map(({ meta }) => meta)
     expect(data).toEqual([
@@ -56,18 +56,18 @@ describe('parse', () => {
     expect(meta[1]?.byteCount).toBe(3) // 'X,Y' (3 bytes)
   })
 
-  it('should return one row with an empty string for empty input', () => {
-    const input = ''
-    const result = [...parse(input)]
+  it('should return one row with an empty string for empty text', () => {
+    const text = ''
+    const result = [...parse(text)]
     const data = result.map(({ row }) => row)
     const meta = result.map(({ meta }) => meta)
     expect(data).toEqual([['']])
     expect(meta[0]?.byteCount).toBe(0)
   })
 
-  it('should return two rows with two empty strings for input with only a newline', () => {
-    const input = '\n'
-    const result = [...parse(input)]
+  it('should return two rows with two empty strings for text with only a newline', () => {
+    const text = '\n'
+    const result = [...parse(text)]
     const data = result.map(({ row }) => row)
     const meta = result.map(({ meta }) => meta)
     expect(data).toEqual([[''], ['']])
@@ -75,11 +75,11 @@ describe('parse', () => {
     expect(meta[1]?.byteCount).toBe(0) // ''
   })
   it.each([
-    { description: 'closed', input: 'a,b,"c"' },
-    { description: 'not closed', input: 'a,b,"c' },
-  ])('returns without the last row, if the quote is $description', ({ input }) => {
+    { description: 'closed', text: 'a,b,"c"' },
+    { description: 'not closed', text: 'a,b,"c' },
+  ])('returns without the last row, if the quote is $description', ({ text }) => {
     // this test is really only to please the coverage gods
-    const result = [...parse(input, { ignoreLastRow: true })]
+    const result = [...parse(text, { ignoreLastRow: true })]
     const data = result.map(({ row }) => row)
     const errors = result.flatMap(({ errors: rowErrors }, row) => rowErrors.map(error => ({ ...error, row })))
     expect(data).toEqual([])

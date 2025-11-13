@@ -14,19 +14,19 @@ export function validateNewline(newline?: Newline): Newline | undefined {
 
 /**
  * Guess the line endings
- * @param input The input string
+ * @param text The string
  * @param quoteChar The quote character
  * @returns The line ending character
  */
-export function guessLineEndings(input: string, quoteChar: string): Newline {
-  input = input.substring(0, 1024 * 1024) // max length 1 MB
+export function guessLineEndings(text: string, quoteChar: string): Newline {
+  text = text.substring(0, 1024 * 1024) // max length 1 MB
   // Replace all the text inside quotes
   const re = new RegExp(escapeRegExp(quoteChar) + '([^]*?)' + escapeRegExp(quoteChar), 'gm')
-  input = input.replace(re, '')
+  text = text.replace(re, '')
 
-  const r = input.split('\r')
+  const r = text.split('\r')
 
-  const n = input.split('\n')
+  const n = text.split('\n')
 
   /* v8 ignore if -- @preserve */
   if (!(0 in r && 0 in n)) {

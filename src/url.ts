@@ -34,7 +34,7 @@ interface ParseUrlOptions extends ParseOptions, FetchOptions {
  * @param options.escapeChar The escape character used in the CSV data. Defaults to the quote character.
  * @param options.comments The comment character or boolean to indicate comments. Defaults to false (don't strip comments).
  * @param options.delimitersToGuess The list of delimiters to guess from
- * @param options.stripBOM Whether to strip the BOM character at the start of the input. Defaults to true.
+ * @param options.stripBOM Whether to strip the BOM character at the start of the text. Defaults to true.
  * @yields Parsed rows along with metadata.
  * @returns An async generator that yields parsed rows.
  */
@@ -86,15 +86,15 @@ export async function* parseUrl(
     }
 
     let consumedBytes = 0
-    const input = decoder.decode(bytes)
+    const text = decoder.decode(bytes)
 
     if (!parseOptions) {
-      const result = validateAndGuessParseOptions(options, { input, delimitersToGuess })
+      const result = validateAndGuessParseOptions(options, { text, delimitersToGuess })
       parseOptions = result.parseOptions
       delimiterError = result.error
     }
 
-    for (const result of (options.parse ?? parse)(input, {
+    for (const result of (options.parse ?? parse)(text, {
       ...parseOptions,
       // the remaining bytes may not contain a full last row
       ignoreLastRow: true,
@@ -139,8 +139,8 @@ export async function* parseUrl(
   }
 
   // Parse the last row (even if the remaining bytes are empty)
-  const input = decoder.decode(bytes)
-  for (const result of (options.parse ?? parse)(input, {
+  const text = decoder.decode(bytes)
+  for (const result of (options.parse ?? parse)(text, {
     ...parseOptions,
     // parse until the last byte
     ignoreLastRow: false,

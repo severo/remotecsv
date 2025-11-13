@@ -16,30 +16,30 @@ describe('validateNewline', () => {
 
 describe('guessLineEndings', () => {
   it('should guess \\n as line ending', () => {
-    const input = 'line1\nline2\nline3'
-    expect(guessLineEndings(input, '"')).toBe('\n')
+    const text = 'line1\nline2\nline3'
+    expect(guessLineEndings(text, '"')).toBe('\n')
   })
 
   it('should guess \\r as line ending', () => {
-    const input = 'line1\rline2\rline3'
-    expect(guessLineEndings(input, '"')).toBe('\r')
+    const text = 'line1\rline2\rline3'
+    expect(guessLineEndings(text, '"')).toBe('\r')
   })
 
   it('should guess \\r\\n as line ending', () => {
-    const input = 'line1\r\nline2\r\nline3'
-    expect(guessLineEndings(input, '"')).toBe('\r\n')
+    const text = 'line1\r\nline2\r\nline3'
+    expect(guessLineEndings(text, '"')).toBe('\r\n')
   })
 
   it('should ignore quoted newlines', () => {
-    const input = 'line1,"line2\nwith newline",line3\r\nline4'
-    expect(guessLineEndings(input, '"')).toBe('\r\n')
+    const text = 'line1,"line2\nwith newline",line3\r\nline4'
+    expect(guessLineEndings(text, '"')).toBe('\r\n')
   })
 
   it.for([
-    { input: 'line1\rline2\nline3\r\nline4\nline5\r', expected: '\r' },
-    { input: 'line1\nline2\rline3\r\nline4\nline5\n', expected: '\n' },
-    { input: 'line1\r\nline2\rline3\nline4\r\nline5\r\n', expected: '\r\n' },
-  ])('should handle mixed line endings', ({ input, expected }) => {
-    expect(guessLineEndings(input, '"')).toBe(expected)
+    { text: 'line1\rline2\nline3\r\nline4\nline5\r', expected: '\r' },
+    { text: 'line1\nline2\rline3\r\nline4\nline5\n', expected: '\n' },
+    { text: 'line1\r\nline2\rline3\nline4\r\nline5\r\n', expected: '\r\n' },
+  ])('should handle mixed line endings', ({ text, expected }) => {
+    expect(guessLineEndings(text, '"')).toBe(expected)
   })
 })

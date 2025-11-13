@@ -5,11 +5,11 @@ import { parseUrl } from '../src/url'
 import { toUrl } from '../src/utils'
 import { PARSE_TESTS } from './cases'
 
-function* parseMock(input: string): Generator<ParseResult, void, unknown> {
+function* parseMock(text: string): Generator<ParseResult, void, unknown> {
   const encoder = new TextEncoder()
-  const bytes = encoder.encode(input)
+  const bytes = encoder.encode(text)
   yield {
-    row: [input],
+    row: [text],
     errors: [],
     meta: {
       byteCount: bytes.length,
@@ -17,7 +17,7 @@ function* parseMock(input: string): Generator<ParseResult, void, unknown> {
       newline: '\n',
       // quote: '"',
       delimiter: ',',
-      cursor: input.length,
+      cursor: text.length,
     },
   }
 }
@@ -129,7 +129,7 @@ describe('Papaparse high-level tests', () => {
   PARSE_TESTS.forEach((test) => {
     it(test.description, async () => {
       const config: Parameters<typeof parseUrl>[1] = test.config || {}
-      const { url, fileSize, revoke } = toUrl(test.input)
+      const { url, fileSize, revoke } = toUrl(test.text)
       const result = []
       for await (const r of parseUrl(url, { ...config, lastByte: fileSize - 1 })) {
         result.push(r)
@@ -170,8 +170,8 @@ describe('parseUrl', () => {
     expect(bytes).toBe(fileSize)
   })
   it.each([undefined, true, false])('should respect the stripBOM option (%s), and count the bytes correctly', async (stripBOM) => {
-    const input = '\ufeffhello, csvremote!!!'
-    const { url, fileSize, revoke } = toUrl(input)
+    const text = '\ufeffhello, csvremote!!!'
+    const { url, fileSize, revoke } = toUrl(text)
     const result = []
     for await (const r of parseUrl(url, { stripBOM, lastByte: fileSize - 1 })) {
       result.push(r)

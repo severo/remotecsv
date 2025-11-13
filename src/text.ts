@@ -3,8 +3,8 @@ import { parse } from './parser'
 import type { ParseResult } from './types'
 
 /**
- * Parses a string into CSV data.
- * @param input The input string to parse.
+ * Parses a text into CSV data.
+ * @param text The string to parse.
  * @param options Options for parsing the string.
  * @param options.delimiter The delimiter used in the CSV data. Defaults to ','.
  * @param options.newline The newline used in the CSV data. Defaults to '\n'.
@@ -13,21 +13,21 @@ import type { ParseResult } from './types'
  * @param options.comments The comment character or boolean to indicate comments. Defaults to false (don't strip comments).
  * @param options.delimitersToGuess The list of delimiters to guess from
  * @param options.ignoreLastRow Whether to ignore the last row. Defaults to false.
- * @param options.stripBOM Whether to strip the BOM character at the start of the input. Defaults to true.
+ * @param options.stripBOM Whether to strip the BOM character at the start of the text. Defaults to true.
  * @yields Parsed data and metadata.
  * @returns A generator yielding parsed data and metadata row by row.
  */
-export function* parseString(input: string,
+export function* parseText(text: string,
   options: ParseOptions & {
     delimitersToGuess?: string[]
     ignoreLastRow?: boolean
     stripBOM?: boolean
   } = {}): Generator<ParseResult, void, unknown> {
   const { delimitersToGuess, ignoreLastRow, stripBOM } = options
-  const { parseOptions, error } = validateAndGuessParseOptions(options, { input, delimitersToGuess })
+  const { parseOptions, error } = validateAndGuessParseOptions(options, { text, delimitersToGuess })
 
   let delimiterError: DelimiterError | undefined = error
-  for (const result of parse(input, {
+  for (const result of parse(text, {
     ...parseOptions,
     ignoreLastRow,
     stripBOM,

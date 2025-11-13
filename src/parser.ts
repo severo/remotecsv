@@ -4,8 +4,8 @@ import type { ParseError, ParseResult } from './types'
 import { escapeRegExp } from './utils'
 
 /**
- * Parses the input string with the given options
- * @param input The input string to parse
+ * Parses the text with the given options
+ * @param text The string to parse
  * @param options The options for parsing
  * @param options.delimiter The delimiter used in the CSV data. Defaults to ','.
  * @param options.newline The newline used in the CSV data. Defaults to '\n'.
@@ -13,11 +13,11 @@ import { escapeRegExp } from './utils'
  * @param options.escapeChar The escape character used in the CSV data. Defaults to the quote character.
  * @param options.comments The comment character or boolean to indicate comments. Defaults to false (don't strip comments).
  * @param options.ignoreLastRow Whether to ignore the last row. Defaults to false.
- * @param options.stripBOM Whether to strip the BOM character at the start of the input. Defaults to true.
+ * @param options.stripBOM Whether to strip the BOM character at the start of the text. Defaults to true.
  * @yields The parse results, one row at a time
  * @returns A generator yielding parse results
  */
-export function* parse(input: string, options: ParseOptions & {
+export function* parse(text: string, options: ParseOptions & {
   ignoreLastRow?: boolean
   stripBOM?: boolean
 } = {}): Generator<ParseResult, void, unknown> {
@@ -33,7 +33,7 @@ export function* parse(input: string, options: ParseOptions & {
 
   // We don't need to compute some of these every time parse() is called,
   // but having them in a more local scope seems to perform better
-  const inputLen = input.length,
+  const textLen = text.length,
     delimLen = delimiter.length,
     newlineLen = newline.length,
     commentsLen = comments === false ? 0 : comments.length
@@ -45,19 +45,19 @@ export function* parse(input: string, options: ParseOptions & {
   let lastCursor = 0
   let offset = 0 // Byte offset
 
-  if (stripBOM && input.charCodeAt(0) === 0xfeff) {
+  if (stripBOM && text.charCodeAt(0) === 0xfeff) {
     cursor = 1
   }
 
-  let nextDelim = input.indexOf(delimiter, cursor)
-  let nextNewline = input.indexOf(newline, cursor)
+  let nextDelim = text.indexOf(delimiter, cursor)
+  let nextNewline = text.indexOf(newline, cursor)
   const quoteCharRegex = new RegExp(escapeRegExp(escapeChar) + escapeRegExp(quoteChar), 'g')
-  let quoteSearch = input.indexOf(quoteChar, cursor)
+  let quoteSearch = text.indexOf(quoteChar, cursor)
 
   // Parser loop
   for (;;) {
     // Field has opening quote
-    if (input[cursor] === quoteChar) {
+    if (text[cursor] === quoteChar) {
       // Start our search for the closing quote where the cursor is
       quoteSearch = cursor
 
@@ -66,7 +66,7 @@ export function* parse(input: string, options: ParseOptions & {
 
       for (;;) {
         // Find closing quote
-        quoteSearch = input.indexOf(quoteChar, quoteSearch + 1)
+        quoteSearch = text.indexOf(quoteChar, quoteSearch + 1)
 
         // No other quotes are found - no other delimiters
         if (quoteSearch === -1) {
@@ -86,8 +86,8 @@ export function* parse(input: string, options: ParseOptions & {
         }
 
         // Closing quote at EOF
-        if (quoteSearch === inputLen - 1) {
-          const value = input.substring(cursor, quoteSearch).replace(quoteCharRegex, quoteChar)
+        if (quoteSearch === textLen - 1) {
+          const value = text.substring(cursor, quoteSearch).replace(quoteCharRegex, quoteChar)
           const last = finish(value)
           if (last) {
             yield last
@@ -97,53 +97,53 @@ export function* parse(input: string, options: ParseOptions & {
 
         // If this quote is escaped, it's part of the data; skip it
         // If the quote character is the escape character, then check if the next character is the escape character
-        if (quoteChar === escapeChar && input[quoteSearch + 1] === escapeChar) {
+        if (quoteChar === escapeChar && text[quoteSearch + 1] === escapeChar) {
           quoteSearch++
           continue
         }
 
         // If the quote character is not the escape character, then check if the previous character was the escape character
-        if (quoteChar !== escapeChar && quoteSearch !== 0 && input[quoteSearch - 1] === escapeChar) {
+        if (quoteChar !== escapeChar && quoteSearch !== 0 && text[quoteSearch - 1] === escapeChar) {
           continue
         }
 
         if (nextDelim !== -1 && nextDelim < (quoteSearch + 1)) {
-          nextDelim = input.indexOf(delimiter, (quoteSearch + 1))
+          nextDelim = text.indexOf(delimiter, (quoteSearch + 1))
         }
         if (nextNewline !== -1 && nextNewline < (quoteSearch + 1)) {
-          nextNewline = input.indexOf(newline, (quoteSearch + 1))
+          nextNewline = text.indexOf(newline, (quoteSearch + 1))
         }
         // Check up to nextDelim or nextNewline, whichever is closest
         const checkUpTo = nextNewline === -1 ? nextDelim : Math.min(nextDelim, nextNewline)
-        const spacesBetweenQuoteAndDelimiter = extraSpaces({ index: checkUpTo, input, quoteSearch })
+        const spacesBetweenQuoteAndDelimiter = extraSpaces({ index: checkUpTo, text, quoteSearch })
 
         // Closing quote followed by delimiter or 'unnecessary spaces + delimiter'
         const startA = quoteSearch + 1 + spacesBetweenQuoteAndDelimiter
         const endA = startA + delimLen
-        if (input.substring(startA, endA) === delimiter) {
-          row.push(input.substring(cursor, quoteSearch).replace(quoteCharRegex, quoteChar))
+        if (text.substring(startA, endA) === delimiter) {
+          row.push(text.substring(cursor, quoteSearch).replace(quoteCharRegex, quoteChar))
           cursor = endA
 
           // If char after following delimiter is not quoteChar, we find next quote char position
-          if (input[endA] !== quoteChar) {
-            quoteSearch = input.indexOf(quoteChar, cursor)
+          if (text[endA] !== quoteChar) {
+            quoteSearch = text.indexOf(quoteChar, cursor)
           }
-          nextDelim = input.indexOf(delimiter, cursor)
-          nextNewline = input.indexOf(newline, cursor)
+          nextDelim = text.indexOf(delimiter, cursor)
+          nextNewline = text.indexOf(newline, cursor)
           break
         }
 
-        const spacesBetweenQuoteAndNewLine = extraSpaces({ index: nextNewline, input, quoteSearch })
+        const spacesBetweenQuoteAndNewLine = extraSpaces({ index: nextNewline, text, quoteSearch })
 
         // Closing quote followed by newline or 'unnecessary spaces + newLine'
         const startB = quoteSearch + 1 + spacesBetweenQuoteAndNewLine
         const endB = startB + newlineLen
-        if (input.substring(startB, endB) === newline) {
-          row.push(input.substring(cursor, quoteSearch).replace(quoteCharRegex, quoteChar))
+        if (text.substring(startB, endB) === newline) {
+          row.push(text.substring(cursor, quoteSearch).replace(quoteCharRegex, quoteChar))
           cursor = endB
-          nextNewline = input.indexOf(newline, cursor)
-          nextDelim = input.indexOf(delimiter, cursor) // because we may have skipped the nextDelim in the quoted field
-          quoteSearch = input.indexOf(quoteChar, cursor) // we search for first quote in next line
+          nextNewline = text.indexOf(newline, cursor)
+          nextDelim = text.indexOf(delimiter, cursor) // because we may have skipped the nextDelim in the quoted field
+          quoteSearch = text.indexOf(quoteChar, cursor) // we search for first quote in next line
 
           /** Yields the row and resets row & errors. */
           yield getResult()
@@ -170,31 +170,31 @@ export function* parse(input: string, options: ParseOptions & {
     }
 
     // Comment found at start of new line
-    if (comments && row.length === 0 && input.substring(cursor, cursor + commentsLen) === comments) {
+    if (comments && row.length === 0 && text.substring(cursor, cursor + commentsLen) === comments) {
       if (nextNewline === -1) {
         // Comment ends at EOF
         return
       }
       cursor = nextNewline + newlineLen
-      nextNewline = input.indexOf(newline, cursor)
-      nextDelim = input.indexOf(delimiter, cursor)
+      nextNewline = text.indexOf(newline, cursor)
+      nextDelim = text.indexOf(delimiter, cursor)
       continue
     }
 
     // Next delimiter comes before next newline, so we've reached end of field
     if (nextDelim !== -1 && (nextDelim < nextNewline || nextNewline === -1)) {
-      row.push(input.substring(cursor, nextDelim))
+      row.push(text.substring(cursor, nextDelim))
       cursor = nextDelim + delimLen
       // we look for next delimiter char
-      nextDelim = input.indexOf(delimiter, cursor)
+      nextDelim = text.indexOf(delimiter, cursor)
       continue
     }
 
     // End of row
     if (nextNewline !== -1) {
-      row.push(input.substring(cursor, nextNewline))
+      row.push(text.substring(cursor, nextNewline))
       cursor = nextNewline + newlineLen
-      nextNewline = input.indexOf(newline, cursor)
+      nextNewline = text.indexOf(newline, cursor)
 
       yield getResult()
       row = []
@@ -213,17 +213,17 @@ export function* parse(input: string, options: ParseOptions & {
   return
 
   /**
-   * Appends the remaining input from cursor to the end into
+   * Appends the remaining text from cursor to the end into
    * row, saves the row, calls step, and returns the results.
-   * @param value The remaining input to append
+   * @param value The remaining text to append
    * @returns The results object
    */
   function finish(value?: string): ParseResult | undefined {
     if (ignoreLastRow)
       return
-    value ??= input.substring(cursor)
+    value ??= text.substring(cursor)
     row.push(value)
-    cursor = inputLen
+    cursor = textLen
     // lastCursor = cursor
     return getResult()
   }
@@ -234,7 +234,7 @@ export function* parse(input: string, options: ParseOptions & {
    */
   function getResult(): ParseResult {
     // the row started at lastCursor, ended at cursor
-    const string = input.substring(lastCursor, cursor)
+    const string = text.substring(lastCursor, cursor)
     const byteCount = new TextEncoder().encode(string).length
 
     const result = {
@@ -260,19 +260,19 @@ export function* parse(input: string, options: ParseOptions & {
  * Checks if there are extra spaces after closing quote and given index without any text
  * if Yes, returns the number of spaces
  * @param options Arguments
- * @param options.input The input string
+ * @param options.text The text string
  * @param options.index The index to check up to
  * @param options.quoteSearch The position of the closing quote
  * @returns number of spaces
  */
-function extraSpaces({ input, index, quoteSearch }: {
-  input: string
+function extraSpaces({ text, index, quoteSearch }: {
+  text: string
   index: number
   quoteSearch: number
 }) {
   let spaceLength = 0
   if (index !== -1) {
-    const textBetweenClosingQuoteAndIndex = input.substring(quoteSearch + 1, index)
+    const textBetweenClosingQuoteAndIndex = text.substring(quoteSearch + 1, index)
     if (textBetweenClosingQuoteAndIndex && textBetweenClosingQuoteAndIndex.trim() === '') {
       spaceLength = textBetweenClosingQuoteAndIndex.length
     }

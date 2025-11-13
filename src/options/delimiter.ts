@@ -20,13 +20,13 @@ export function validateDelimiter(delimiter?: string): undefined | string {
 
 /**
  * Guess the delimiter
- * @param input The input string
+ * @param text The string
  * @param newline The newline character
  * @param comments The comment character or boolean to indicate comments
  * @param delimitersToGuess The list of delimiters to guess from
  * @returns An object indicating whether guessing was successful and the best delimiter found
  */
-export function guessDelimiter(input: string, newline?: Newline, comments?: boolean | string, delimitersToGuess?: string[]) {
+export function guessDelimiter(text: string, newline?: Newline, comments?: boolean | string, delimitersToGuess?: string[]) {
   let bestDelimiter, bestDelta, maxFieldCount
 
   delimitersToGuess = delimitersToGuess || [',', '\t', '|', ';', RECORD_SEP, UNIT_SEP]
@@ -40,7 +40,7 @@ export function guessDelimiter(input: string, newline?: Newline, comments?: bool
     let j = 0
     const previewLines = 10
 
-    for (const { row } of parse(input, {
+    for (const { row } of parse(text, {
       delimiter,
       newline,
       comments,

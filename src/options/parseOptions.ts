@@ -27,12 +27,12 @@ export interface DelimiterError {
  * @param parseOptions.escapeChar The escape character used in the CSV data. Defaults to the quote character.
  * @param parseOptions.comments The comment character or boolean to indicate comments.
  * @param params The parameters for validation and guessing.
- * @param params.input The input string to use for guessing.
+ * @param params.text The string to use for guessing.
  * @param params.delimitersToGuess The list of delimiters to guess from.
  * @returns The validated and guessed parsing options, and the delimiter error (if any).
  */
-export function validateAndGuessParseOptions(parseOptions: ParseOptions, { input, delimitersToGuess}: {
-  input: string
+export function validateAndGuessParseOptions(parseOptions: ParseOptions, { text, delimitersToGuess}: {
+  text: string
   delimitersToGuess?: string[]
 }): {
   parseOptions: ParseOptions
@@ -40,13 +40,13 @@ export function validateAndGuessParseOptions(parseOptions: ParseOptions, { input
 } {
   const quoteChar = validateQuoteChar(parseOptions.quoteChar)
   const escapeChar = validateEscapeChar(parseOptions.escapeChar) ?? quoteChar
-  const newline = validateNewline(parseOptions.newline) ?? guessLineEndings(input, quoteChar)
+  const newline = validateNewline(parseOptions.newline) ?? guessLineEndings(text, quoteChar)
   const comments = parseOptions.comments
 
   let error: DelimiterError | undefined
   let delimiter = validateDelimiter(parseOptions.delimiter)
   if (!delimiter) {
-    const delimGuess = guessDelimiter(input, newline, comments, delimitersToGuess)
+    const delimGuess = guessDelimiter(text, newline, comments, delimitersToGuess)
     if (delimGuess.successful)
       delimiter = delimGuess.bestDelimiter
     else {
