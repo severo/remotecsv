@@ -169,4 +169,18 @@ describe('parseUrl', () => {
     expect(result).toEqual(text.split('\n').map(line => line.split(',')))
     expect(bytes).toBe(fileSize)
   })
+  it.each([undefined, true, false])('should respect the stripBOM option (%s), and count the bytes correctly', async (stripBOM) => {
+    const input = '\ufeffhello, csvremote!!!'
+    const { url, fileSize, revoke } = toUrl(input)
+    const result = []
+    for await (const r of parseUrl(url, { stripBOM, lastByte: fileSize - 1 })) {
+      result.push(r)
+    }
+    revoke()
+    expect(result.length).toBe(1)
+    const data = result.map(({ row }) => row)
+    expect(data).toEqual([stripBOM ?? true ? ['hello', ' csvremote!!!'] : ['\ufeffhello', ' csvremote!!!']])
+    // includes BOM bytes, independently of stripBOM
+    expect(result[0]?.meta.byteCount).toBe(fileSize)
+  })
 })

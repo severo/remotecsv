@@ -108,6 +108,7 @@ export async function* parseUrl(
       ignoreLastRow: true,
       stripBOM: isFirstChunk ? stripBOM : false,
     })) {
+      isFirstChunk = false
       consumedBytes += result.meta.byteCount
       if (consumedBytes > bytes.length) {
         throw new Error('Invalid state: consumedBytes exceeds bytes length')
@@ -136,7 +137,6 @@ export async function* parseUrl(
     bytes = bytes.slice(consumedBytes)
     cursor += consumedBytes
     firstByte += chunkSize
-    isFirstChunk = false
 
     if (firstByte <= lastByte) {
       /* v8 ignore if -- @preserve */
