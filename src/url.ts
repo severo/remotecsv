@@ -161,6 +161,11 @@ export async function* parseUrl(
       // pass other options
       ...parseOptions,
     })) {
+      // Add delimiter error to the first result only
+      if (delimiterError) {
+        result.errors.push(delimiterError)
+        delimiterError = undefined
+      }
       if (skipEmptyLines && testEmptyLine(result.row, skipEmptyLines)) {
         // TODO(SL) how to report the skipped lines in the metadata?
         continue
