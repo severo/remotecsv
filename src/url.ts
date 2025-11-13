@@ -4,7 +4,6 @@ import { defaultChunkSize } from './options/constants'
 import { type DelimiterError, type ParseOptions, validateAndGuessParseOptions } from './options/parseOptions'
 import { parse } from './parser'
 import type { ParseResult } from './types'
-import { testEmptyLine } from './utils'
 
 interface FetchOptions {
   chunkSize?: number
@@ -16,7 +15,6 @@ interface FetchOptions {
 }
 interface ParseUrlOptions extends ParseOptions, FetchOptions {
   delimitersToGuess?: string[]
-  skipEmptyLines?: boolean | 'greedy'
   stripBOM?: boolean
 }
 
@@ -34,9 +32,8 @@ interface ParseUrlOptions extends ParseOptions, FetchOptions {
  * @param options.newline The newline used in the CSV data. Defaults to '\n'.
  * @param options.quoteChar The quote character used in the CSV data. Defaults to '"'.
  * @param options.escapeChar The escape character used in the CSV data. Defaults to the quote character.
- * @param options.comments The comment character or boolean to indicate comments
+ * @param options.comments The comment character or boolean to indicate comments. Defaults to false (don't strip comments).
  * @param options.delimitersToGuess The list of delimiters to guess from
- * @param options.skipEmptyLines Whether to skip empty lines, if so, whether 'greedy' or not. Defaults to false.
  * @param options.stripBOM Whether to strip the BOM character at the start of the input. Defaults to true.
  * @yields Parsed rows along with metadata.
  * @returns An async generator that yields parsed rows.
@@ -50,7 +47,7 @@ export async function* parseUrl(
   let firstByte = checkIntegerGreaterOrEqualThan(options.firstByte, 0) ?? 0
   let lastByte = checkIntegerGreaterOrEqualThan(options.lastByte, -1)
 
-  const { delimitersToGuess, skipEmptyLines, stripBOM } = options
+  const { delimitersToGuess, stripBOM } = options
   let isFirstChunk = true
   let parseOptions: ParseOptions | undefined = undefined
   let delimiterError: DelimiterError | undefined = undefined
@@ -92,7 +89,7 @@ export async function* parseUrl(
     const input = decoder.decode(bytes)
 
     if (!parseOptions) {
-      const result = validateAndGuessParseOptions(options, { input, skipEmptyLines, delimitersToGuess })
+      const result = validateAndGuessParseOptions(options, { input, delimitersToGuess })
       parseOptions = result.parseOptions
       delimiterError = result.error
     }
@@ -112,10 +109,6 @@ export async function* parseUrl(
       if (delimiterError) {
         result.errors.push(delimiterError)
         delimiterError = undefined
-      }
-      if (skipEmptyLines && testEmptyLine(result.row, skipEmptyLines)) {
-        // TODO(SL) how to report the skipped lines in the metadata?
-        continue
       }
       // Yield the result with updated offset
       yield {
@@ -157,10 +150,6 @@ export async function* parseUrl(
     if (delimiterError) {
       result.errors.push(delimiterError)
       delimiterError = undefined
-    }
-    if (skipEmptyLines && testEmptyLine(result.row, skipEmptyLines)) {
-      // TODO(SL) how to report the skipped lines in the metadata?
-      continue
     }
     yield {
       ...result,

@@ -28,13 +28,11 @@ export interface DelimiterError {
  * @param parseOptions.comments The comment character or boolean to indicate comments.
  * @param params The parameters for validation and guessing.
  * @param params.input The input string to use for guessing.
- * @param params.skipEmptyLines Whether to skip empty lines.
  * @param params.delimitersToGuess The list of delimiters to guess from.
  * @returns The validated and guessed parsing options, and the delimiter error (if any).
  */
-export function validateAndGuessParseOptions(parseOptions: ParseOptions, { input, skipEmptyLines, delimitersToGuess}: {
+export function validateAndGuessParseOptions(parseOptions: ParseOptions, { input, delimitersToGuess}: {
   input: string
-  skipEmptyLines?: boolean | 'greedy'
   delimitersToGuess?: string[]
 }): {
   parseOptions: ParseOptions
@@ -48,7 +46,7 @@ export function validateAndGuessParseOptions(parseOptions: ParseOptions, { input
   let error: DelimiterError | undefined
   let delimiter = validateDelimiter(parseOptions.delimiter)
   if (!delimiter) {
-    const delimGuess = guessDelimiter(input, newline, skipEmptyLines, comments, delimitersToGuess)
+    const delimGuess = guessDelimiter(input, newline, comments, delimitersToGuess)
     if (delimGuess.successful)
       delimiter = delimGuess.bestDelimiter
     else {

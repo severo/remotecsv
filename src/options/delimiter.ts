@@ -22,12 +22,11 @@ export function validateDelimiter(delimiter?: string): undefined | string {
  * Guess the delimiter
  * @param input The input string
  * @param newline The newline character
- * @param skipEmptyLines Whether to skip empty lines, if so, whether 'greedy' or not
  * @param comments The comment character or boolean to indicate comments
  * @param delimitersToGuess The list of delimiters to guess from
  * @returns An object indicating whether guessing was successful and the best delimiter found
  */
-export function guessDelimiter(input: string, newline?: Newline, skipEmptyLines?: boolean | 'greedy', comments?: boolean | string, delimitersToGuess?: string[]) {
+export function guessDelimiter(input: string, newline?: Newline, comments?: boolean | string, delimitersToGuess?: string[]) {
   let bestDelimiter, bestDelta, maxFieldCount
 
   delimitersToGuess = delimitersToGuess || [',', '\t', '|', ';', RECORD_SEP, UNIT_SEP]
@@ -50,7 +49,8 @@ export function guessDelimiter(input: string, newline?: Newline, skipEmptyLines?
       if (j >= previewLines) {
         break
       }
-      if (skipEmptyLines && testEmptyLine(row, skipEmptyLines)) {
+      // always remove empty lines from consideration
+      if (testEmptyLine(row, true)) {
         continue
       }
       nonEmptyLinesCount++

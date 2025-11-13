@@ -11,7 +11,7 @@ import { escapeRegExp } from './utils'
  * @param options.newline The newline used in the CSV data. Defaults to '\n'.
  * @param options.quoteChar The quote character used in the CSV data. Defaults to '"'.
  * @param options.escapeChar The escape character used in the CSV data. Defaults to the quote character.
- * @param options.comments The comment character or boolean to indicate comments.
+ * @param options.comments The comment character or boolean to indicate comments. Defaults to false (don't strip comments).
  * @param options.ignoreLastRow Whether to ignore the last row. Defaults to false.
  * @param options.stripBOM Whether to strip the BOM character at the start of the input. Defaults to true.
  * @yields The parse results, one row at a time

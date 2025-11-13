@@ -1,10 +1,11 @@
-import { describe, expect, it, test } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 import { parseString } from '../src/string'
+import { testEmptyLine } from '../src/utils'
 import { cases, PARSE_TESTS } from './cases'
 
 describe('parseString', () => {
-  test('decodes a string', () => {
+  it('decodes a string', () => {
     const text = 'hello, csvremote!!!'
     const encoder = new TextEncoder()
     const bytes = encoder.encode(text)
@@ -18,8 +19,7 @@ describe('parseString', () => {
           cursor: text.length,
           offset: 0,
           delimiter: ',',
-          newline: '\n',
-          // quote: '"',
+          newline: '\n' as const,
           byteCount: bytes.length,
         },
       })
@@ -27,11 +27,32 @@ describe('parseString', () => {
     // For now: only one iteration per chunk
     expect(i).toBe(1)
   })
-  test.for(cases)('$description', ({ input, expected }) => {
+  it.for(cases)('$description', ({ input, expected }) => {
     const results = [...parseString(input)]
 
     expect(results.map(({ row }) => row)).toEqual(expected.rows)
     // TODO(SL): check the metadata and the errors too
+  })
+
+  it.for([
+    { description: '', input: 'a,b,c\n\nd,e,f', expected: [['a', 'b', 'c'], ['d', 'e', 'f']] },
+    { description: ', with newline at end of input', input: 'a,b,c\r\n\r\nd,e,f\r\n', expected: [['a', 'b', 'c'], ['d', 'e', 'f']] },
+    { description: ', with empty input', input: '', expected: [] },
+    { description: ', with first line only whitespace', input: ' \na,b,c', expected: [[' '], ['a', 'b', 'c']] },
+    { description: ', with comments', input: '#comment line 1\n#comment line 2\na,b,c\n#comment line 3\nd,e,f\n', expected: [['a', 'b', 'c'], ['d', 'e', 'f']] },
+  ])('works together with testEmptyLine to skip empty lines$description', ({ input, expected }) => {
+    const results = [...parseString(input, { comments: '#' })].filter(({ row }) => !testEmptyLine(row, true))
+
+    expect(results.map(({ row }) => row)).toEqual(expected)
+  })
+
+  it.for([
+    { description: '', input: 'a,b\n\n,\nc,d\n , \n""," "\n\t,\t\n,,,,\n', expected: [['a', 'b'], ['c', 'd']] },
+    { description: ', with quotes and delimiters as content', input: 'a,b\n\n,\nc,d\n" , ",","\n""" """,""""""\n\n\n', expected: [['a', 'b'], ['c', 'd'], [' , ', ','], ['" "', '""']] },
+  ])('works together with testEmptyLine to skip empty lines, in greedy mode$description', ({ input, expected }) => {
+    const results = [...parseString(input)].filter(({ row }) => !testEmptyLine(row, 'greedy'))
+
+    expect(results.map(({ row }) => row)).toEqual(expected)
   })
 })
 

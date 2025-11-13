@@ -52,21 +52,21 @@ describe('guessDelimiter', () => {
     expect(result.bestDelimiter).toBe(UNIT_SEP)
   })
 
-  it('should skip empty lines while detecting delimiter', () => {
+  it('should detect delimiter even with empty lines', () => {
     const input = 'a,b\n1,2\n3,4\n'
-    const result = guessDelimiter(input, undefined, true)
+    const result = guessDelimiter(input, undefined)
     expect(result.bestDelimiter).toBe(',')
   })
 
   it('should ignore comment lines while detecting delimiter in an escaped file', () => {
     const input = '#1\n#2\n#3\n#4\n#5\n#6\n#7\n#8\n#9\n#10\none,"t,w,o",three\nfour,five,six'
-    const result = guessDelimiter(input, undefined, false, '#')
+    const result = guessDelimiter(input, undefined, '#')
     expect(result.bestDelimiter).toBe(',')
   })
 
   it('should ignore comment lines while detecting delimiter in an non-escaped file', () => {
     const input = '#1\n#2\n#3\n#4\n#5\n#6\n#7\n#8\n#9\n#10\n#11\none,two,three\nfour,five,six'
-    const result = guessDelimiter(input, undefined, false, '#')
+    const result = guessDelimiter(input, undefined, '#')
     expect(result.bestDelimiter).toBe(',')
   })
 
@@ -96,7 +96,7 @@ describe('guessDelimiter', () => {
 
   it('should use custom delimiters to guess from', () => {
     const input = '"A"~"B"~"C"~"D"'
-    const result = guessDelimiter(input, undefined, false, false, ['~', '@', '%'])
+    const result = guessDelimiter(input, undefined, false, ['~', '@', '%'])
     expect(result.bestDelimiter).toBe('~')
   })
 
