@@ -6,8 +6,8 @@ import type { ParseResult } from './types'
  * Parses a text into CSV data.
  * @param text The string to parse.
  * @param options Options for parsing the string.
- * @param options.delimiter The delimiter used in the CSV data. Defaults to ','.
- * @param options.newline The newline used in the CSV data. Defaults to '\n'.
+ * @param options.delimiter The delimiter used in the CSV data. Defaults to guess the delimiter, else ','.
+ * @param options.newline The newline used in the CSV data. Defaults to guess the newline, else '\n'.
  * @param options.quoteChar The quote character used in the CSV data. Defaults to '"'.
  * @param options.escapeChar The escape character used in the CSV data. Defaults to the quote character.
  * @param options.comments The comment character or boolean to indicate comments. Defaults to false (don't strip comments).
