@@ -7,11 +7,19 @@ import { escapeRegExp } from './utils'
  * Parses the input string with the given options
  * @param input The input string to parse
  * @param options The options for parsing
+ * @param options.delimiter The delimiter used in the CSV data. Defaults to ','.
+ * @param options.newline The newline used in the CSV data. Defaults to '\n'.
+ * @param options.quoteChar The quote character used in the CSV data. Defaults to '"'.
+ * @param options.escapeChar The escape character used in the CSV data. Defaults to the quote character.
+ * @param options.comments The comment character or boolean to indicate comments.
+ * @param options.ignoreLastRow Whether to ignore the last row. Defaults to false.
+ * @param options.stripBOM Whether to strip the BOM character at the start of the input. Defaults to true.
  * @yields The parse results, one row at a time
  * @returns A generator yielding parse results
  */
 export function* parse(input: string, options: ParseOptions & {
   ignoreLastRow?: boolean
+  stripBOM?: boolean
 }): Generator<ParseResult, void, unknown> {
   const {
     delimiter,
@@ -21,6 +29,7 @@ export function* parse(input: string, options: ParseOptions & {
     escapeChar,
   } = validateAndSetDefaultParseOptions(options)
   const ignoreLastRow = options.ignoreLastRow ?? false
+  const stripBOM = options.stripBOM ?? true
 
   // We don't need to compute some of these every time parse() is called,
   // but having them in a more local scope seems to perform better
@@ -38,6 +47,10 @@ export function* parse(input: string, options: ParseOptions & {
 
   if (!input) {
     return
+  }
+
+  if (stripBOM && input.charCodeAt(0) === 0xfeff) {
+    cursor = 1
   }
 
   let nextDelim = input.indexOf(delimiter, cursor)

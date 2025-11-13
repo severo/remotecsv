@@ -29,4 +29,30 @@ describe('parse', () => {
       ['4', '5', '6'],
     ])
   })
+
+  it.each([undefined, true, false])('should respect the stripBOM option, and count the bytes correctly', (stripBOM) => {
+    const input = '\ufeffA,B\nX,Y'
+    const result = [...parse(input, { stripBOM })]
+    const data = result.map(({ row }) => row)
+    const meta = result.map(({ meta }) => meta)
+    expect(data).toEqual([
+      [(stripBOM ?? true) ? 'A' : '\ufeffA', 'B'],
+      ['X', 'Y'],
+    ])
+    expect(meta[0]?.byteCount).toBe(7) // '\ufeffA,B\n' (7 bytes)
+    expect(meta[1]?.byteCount).toBe(3) // 'X,Y' (3 bytes)
+  })
+
+  it('should not strip BOM if not at the start', () => {
+    const input = 'A\ufeff,B\nX,Y'
+    const result = [...parse(input, { stripBOM: true })]
+    const data = result.map(({ row }) => row)
+    const meta = result.map(({ meta }) => meta)
+    expect(data).toEqual([
+      ['A\ufeff', 'B'],
+      ['X', 'Y'],
+    ])
+    expect(meta[0]?.byteCount).toBe(7) // 'A\ufeff,B\n' (7 bytes)
+    expect(meta[1]?.byteCount).toBe(3) // 'X,Y' (3 bytes)
+  })
 })

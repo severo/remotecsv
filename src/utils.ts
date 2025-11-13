@@ -40,16 +40,3 @@ export function escapeRegExp(string: string) {
 export function testEmptyLine(s: string[], skipEmptyLines?: 'greedy' | boolean) {
   return skipEmptyLines === 'greedy' ? s.join('').trim() === '' : 0 in s && s.length === 1 && s[0].length === 0
 }
-
-// /**
-//  * Strip character from UTF-8 BOM encoded files that cause issue parsing the file
-//  * @param string The string to strip BOM from
-//  * @returns The string without BOM
-//  */
-// function stripBom(string: string) {
-//   // Note(SL): take the BOM into account when calculating byte offsets (see the ignoreBOM TextDecoder option too)
-//   if (string.charCodeAt(0) === 0xfeff) {
-//     return string.slice(1)
-//   }
-//   return string
-// }

@@ -15,8 +15,9 @@ interface FetchOptions {
   parse?: typeof parse
 }
 interface ParseUrlOptions extends ParseOptions, FetchOptions {
-  skipEmptyLines?: boolean | 'greedy'
   delimitersToGuess?: string[]
+  skipEmptyLines?: boolean | 'greedy'
+  stripBOM?: boolean
 }
 
 /**
@@ -36,6 +37,7 @@ interface ParseUrlOptions extends ParseOptions, FetchOptions {
  * @param options.comments The comment character or boolean to indicate comments
  * @param options.delimitersToGuess The list of delimiters to guess from
  * @param options.skipEmptyLines Whether to skip empty lines, if so, whether 'greedy' or not. Defaults to false.
+ * @param options.stripBOM Whether to strip the BOM character at the start of the input. Defaults to true.
  * @yields Parsed rows along with metadata.
  * @returns An async generator that yields parsed rows.
  */
@@ -48,11 +50,15 @@ export async function* parseUrl(
   let firstByte = checkIntegerGreaterOrEqualThan(options.firstByte, 0) ?? 0
   let lastByte = checkIntegerGreaterOrEqualThan(options.lastByte, -1)
 
-  const { delimitersToGuess, skipEmptyLines } = options
+  const { delimitersToGuess, skipEmptyLines, stripBOM } = options
+  let isFirstChunk = true
   let parseOptions: ParseOptions | undefined = undefined
   let delimiterError: DelimiterError | undefined = undefined
 
-  const decoder = new TextDecoder('utf-8')
+  const decoder = new TextDecoder('utf-8', {
+    // don't strip the BOM, we handle it in the parse function
+    ignoreBOM: true,
+  })
   let cursor = firstByte
   let bytes: Uint8Array<ArrayBufferLike> = new Uint8Array(0)
   while (true) {
@@ -99,6 +105,7 @@ export async function* parseUrl(
     for (const result of (options.parse ?? parse)(input, {
       // the remaining bytes may not contain a full last row
       ignoreLastRow: true,
+      stripBOM: isFirstChunk ? stripBOM : false,
       // pass other options
       ...parseOptions,
     })) {
@@ -130,6 +137,7 @@ export async function* parseUrl(
     bytes = bytes.slice(consumedBytes)
     cursor += consumedBytes
     firstByte += chunkSize
+    isFirstChunk = false
 
     if (firstByte <= lastByte) {
       /* v8 ignore if -- @preserve */
@@ -149,6 +157,7 @@ export async function* parseUrl(
     for (const result of (options.parse ?? parse)(input, {
       // parse until the last byte
       ignoreLastRow: false,
+      stripBOM: isFirstChunk ? stripBOM : false,
       // pass other options
       ...parseOptions,
     })) {
