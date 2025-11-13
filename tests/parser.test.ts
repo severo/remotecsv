@@ -31,19 +31,16 @@ describe('parse', () => {
   })
 
   it.each([undefined, true, false])('should respect the stripBOM option (%s), and count the bytes correctly', (stripBOM) => {
-    // const input = '\ufeffA,B\nX,Y'
-    const input = '\ufeffhello, csvremote!!!'
+    const input = '\ufeffA,B\nX,Y'
     const result = [...parse(input, { stripBOM })]
     const data = result.map(({ row }) => row)
     const meta = result.map(({ meta }) => meta)
-
-    const expected = input.split('\n').map(line => line.split(','))
-    if (stripBOM ?? true) {
-      expected[0][0] = expected[0][0].substring(1)
-    }
-    expect(data).toEqual(expected)
-    // expect(meta[0]?.byteCount).toBe(7) // '\ufeffA,B\n' (7 bytes)
-    // expect(meta[1]?.byteCount).toBe(3) // 'X,Y' (3 bytes)
+    expect(data).toEqual([
+      [(stripBOM ?? true) ? 'A' : '\ufeffA', 'B'],
+      ['X', 'Y'],
+    ])
+    expect(meta[0]?.byteCount).toBe(7) // '\ufeffA,B\n' (7 bytes)
+    expect(meta[1]?.byteCount).toBe(3) // 'X,Y' (3 bytes)
   })
 
   it('should not strip BOM if not at the start', () => {
