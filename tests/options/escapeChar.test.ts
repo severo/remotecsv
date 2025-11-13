@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { validateEscapeChar } from '../src/escapeChar'
+import { validateEscapeChar } from '../../src/options/escapeChar'
 
 describe('validateEscapeChar', () => {
   it('should return undefined if no escape character is provided', () => {

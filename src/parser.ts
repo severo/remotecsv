@@ -1,62 +1,8 @@
 // Adapted from PapaParse (https://www.papaparse.com/)
-import { validateComments } from './comments'
-import { validateDelimiter } from './delimiter'
-import { validateEscapeChar } from './escapeChar'
-import { validateNewline } from './newline'
-import { validateQuoteChar } from './quoteChar'
+import { type ParseOptions, validateAndSetDefaultParseOptions } from './options/parseOptions'
 import type { ParseError, ParseResult } from './types'
 import { escapeRegExp } from './utils'
 
-export interface ParseOptions {
-  delimiter?: string
-  newline?: string
-  comments?: string | boolean
-  quoteChar?: string
-  escapeChar?: string
-  ignoreLastRow?: boolean
-}
-export interface ValidParseOptions {
-  delimiter: string
-  newline: '\n' | '\r' | '\r\n'
-  comments: string | false
-  quoteChar: string
-  escapeChar: string
-  ignoreLastRow: boolean
-}
-
-/**
- * Validates and fills in default options
- * @param options The options to validate
- * @returns The validated options
- */
-export function validateOptions(options: ParseOptions): ValidParseOptions {
-  const quoteChar = validateQuoteChar(options.quoteChar)
-  const escapeChar = validateEscapeChar(options.escapeChar) ?? quoteChar
-
-  // Delimiter must be valid
-  // TODO(SL): it now throws if invalid delimiter is provided instead of defaulting to ,
-  const delimiter = validateDelimiter(options.delimiter) ?? ','
-
-  // Comment character must be valid
-  // TODO(SL): it now throws if invalid comment character is provided instead of defaulting to false
-  const comments = validateComments(options.comments, delimiter) ?? false
-
-  // Newline must be valid: \r, \n, or \r\n
-  // TODO(SL): it now throws if invalid newline is provided instead of defaulting to \n
-  // TODO(SL): force newline to have the correct type?
-  const newline = validateNewline(options.newline) ?? '\n'
-
-  const ignoreLastRow = options.ignoreLastRow ?? false
-
-  return {
-    delimiter,
-    newline,
-    comments,
-    quoteChar,
-    escapeChar,
-    ignoreLastRow,
-  }
-}
 /**
  * Parses the input string with the given options
  * @param input The input string to parse
@@ -64,16 +10,18 @@ export function validateOptions(options: ParseOptions): ValidParseOptions {
  * @yields The parse results, one row at a time
  * @returns A generator yielding parse results
  */
-export function* parse(input: string, options: ParseOptions): Generator<ParseResult, void, unknown> {
+export function* parse(input: string, options: ParseOptions & {
+  ignoreLastRow?: boolean
+}): Generator<ParseResult, void, unknown> {
   const {
     delimiter,
     newline,
     comments,
     quoteChar,
     escapeChar,
-    ignoreLastRow,
-  } = validateOptions(options)
+  } = validateAndSetDefaultParseOptions(options)
   // TODO(SL): allow passing no options?
+  const ignoreLastRow = options.ignoreLastRow ?? false
 
   // We don't need to compute some of these every time parse() is called,
   // but having them in a more local scope seems to perform better

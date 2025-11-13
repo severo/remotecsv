@@ -1,4 +1,4 @@
-import { RECORD_SEP, UNIT_SEP } from '../src/constants.js'
+import { RECORD_SEP, UNIT_SEP } from '../src/options/constants.js'
 
 export const cases = [
   {

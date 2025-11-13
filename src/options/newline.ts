@@ -1,4 +1,4 @@
-import { escapeRegExp } from './utils'
+import { escapeRegExp } from '../utils'
 
 type Newline = '\n' | '\r' | '\r\n'
 

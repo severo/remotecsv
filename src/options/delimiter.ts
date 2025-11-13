@@ -1,6 +1,6 @@
+import { parse } from '../parser'
+import { testEmptyLine } from '../utils'
 import { BAD_DELIMITERS, RECORD_SEP, UNIT_SEP } from './constants'
-import { parse } from './parser'
-import { testEmptyLine } from './utils'
 
 /**
  * Validates the delimiter

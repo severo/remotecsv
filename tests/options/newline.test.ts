@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { guessLineEndings, validateNewline } from '../src/newline'
+import { guessLineEndings, validateNewline } from '../../src/options/newline'
 
 describe('validateNewline', () => {
   it('should return undefined when no newline is provided', () => {

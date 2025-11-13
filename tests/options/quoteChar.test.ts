@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { validateQuoteChar } from '../src/quoteChar'
+import { validateQuoteChar } from '../../src/options/quoteChar'
 
 describe('validateQuoteChar', () => {
   it('should return the default quote character when none is provided', () => {

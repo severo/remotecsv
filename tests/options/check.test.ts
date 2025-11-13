@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { checkIntegerGreaterOrEqualThan } from '../src/check'
+import { checkIntegerGreaterOrEqualThan } from '../../src/options/check'
 
 describe('checkIntegerGreaterOrEqualThan', () => {
   it.for([1, 100])('returns the provided valid integer', (value) => {

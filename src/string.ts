@@ -1,4 +1,4 @@
-import { type DelimiterError, type ParseOptions, validateAndGuessParseOptions } from './parseOptions'
+import { type DelimiterError, type ParseOptions, validateAndGuessParseOptions } from './options/parseOptions'
 import { parse } from './parser'
 import type { ParseResult } from './types'
 import { testEmptyLine } from './utils'

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { validateComments } from '../src/comments'
-import { BAD_DELIMITERS } from '../src/constants'
+import { validateComments } from '../../src/options/comments'
+import { BAD_DELIMITERS } from '../../src/options/constants'
 
 describe('validateComments', () => {
   it('should return undefined when comments is undefined', () => {

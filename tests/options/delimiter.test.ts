@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { BAD_DELIMITERS, RECORD_SEP, UNIT_SEP } from '../src/constants.js'
-import { guessDelimiter, validateDelimiter } from '../src/delimiter.js'
+import { BAD_DELIMITERS, RECORD_SEP, UNIT_SEP } from '../../src/options/constants.js'
+import { guessDelimiter, validateDelimiter } from '../../src/options/delimiter.js'
 
 describe('validateDelimiter', () => {
   it('should return undefined when no delimiter is provided', () => {
