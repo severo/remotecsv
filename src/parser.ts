@@ -118,13 +118,14 @@ export function* parse(input: string, options: ParseOptions & {
         const spacesBetweenQuoteAndDelimiter = extraSpaces({ index: checkUpTo, input, quoteSearch })
 
         // Closing quote followed by delimiter or 'unnecessary spaces + delimiter'
-        // TODO(SL): replace substr
-        if (input.substr(quoteSearch + 1 + spacesBetweenQuoteAndDelimiter, delimLen) === delimiter) {
+        const startA = quoteSearch + 1 + spacesBetweenQuoteAndDelimiter
+        const endA = startA + delimLen
+        if (input.substring(startA, endA) === delimiter) {
           row.push(input.substring(cursor, quoteSearch).replace(quoteCharRegex, quoteChar))
-          cursor = quoteSearch + 1 + spacesBetweenQuoteAndDelimiter + delimLen
+          cursor = endA
 
           // If char after following delimiter is not quoteChar, we find next quote char position
-          if (input[quoteSearch + 1 + spacesBetweenQuoteAndDelimiter + delimLen] !== quoteChar) {
+          if (input[endA] !== quoteChar) {
             quoteSearch = input.indexOf(quoteChar, cursor)
           }
           nextDelim = input.indexOf(delimiter, cursor)
@@ -135,9 +136,11 @@ export function* parse(input: string, options: ParseOptions & {
         const spacesBetweenQuoteAndNewLine = extraSpaces({ index: nextNewline, input, quoteSearch })
 
         // Closing quote followed by newline or 'unnecessary spaces + newLine'
-        if (input.substring(quoteSearch + 1 + spacesBetweenQuoteAndNewLine, quoteSearch + 1 + spacesBetweenQuoteAndNewLine + newlineLen) === newline) {
+        const startB = quoteSearch + 1 + spacesBetweenQuoteAndNewLine
+        const endB = startB + newlineLen
+        if (input.substring(startB, endB) === newline) {
           row.push(input.substring(cursor, quoteSearch).replace(quoteCharRegex, quoteChar))
-          cursor = quoteSearch + 1 + spacesBetweenQuoteAndNewLine + newlineLen
+          cursor = endB
           nextNewline = input.indexOf(newline, cursor)
           nextDelim = input.indexOf(delimiter, cursor) // because we may have skipped the nextDelim in the quoted field
           quoteSearch = input.indexOf(quoteChar, cursor) // we search for first quote in next line
