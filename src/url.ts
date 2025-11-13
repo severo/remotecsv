@@ -13,7 +13,7 @@ interface FetchOptions {
   fetchChunk?: typeof fetchChunk
   parse?: typeof parse
 }
-interface ParseUrlOptions extends ParseOptions, FetchOptions {
+interface parseURLOptions extends ParseOptions, FetchOptions {
   delimitersToGuess?: string[]
   stripBOM?: boolean
 }
@@ -38,9 +38,9 @@ interface ParseUrlOptions extends ParseOptions, FetchOptions {
  * @yields Parsed rows along with metadata.
  * @returns An async generator that yields parsed rows.
  */
-export async function* parseUrl(
+export async function* parseURL(
   url: string,
-  options: ParseUrlOptions = {},
+  options: parseURLOptions = {},
 ): AsyncGenerator<ParseResult, void, unknown> {
   const chunkSize = checkIntegerGreaterOrEqualThan(options.chunkSize, 1) ?? defaultChunkSize
   // TODO(SL): should we accept negative values (from the end)?

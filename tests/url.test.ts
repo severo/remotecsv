@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import type { ParseResult } from '../src/types'
-import { parseUrl } from '../src/url'
+import { parseURL } from '../src/url'
 import { toUrl } from '../src/utils'
 import { PARSE_TESTS } from './cases'
 
@@ -22,14 +22,14 @@ function* parseMock(text: string): Generator<ParseResult, void, unknown> {
   }
 }
 
-describe('parseUrl, while mocking parse, ', () => {
+describe('parseURL, while mocking parse, ', () => {
   it.each([1, 2, 3, 10, 17, 18, 19, 20, 21, 1_000, undefined])('accepts chunk size of %s', async (chunkSize) => {
     const text = 'hello, csvremote!!!' // length: 19
     const { url, fileSize, revoke } = toUrl(text)
     let result = ''
     let bytes = 0
     // passing 'to: fileSize - 1' for Node.js bug: https://github.com/nodejs/node/issues/60382
-    for await (const { row, meta: { offset, byteCount } } of parseUrl(url, { chunkSize, lastByte: fileSize - 1, parse: parseMock })) {
+    for await (const { row, meta: { offset, byteCount } } of parseURL(url, { chunkSize, lastByte: fileSize - 1, parse: parseMock })) {
       result += row
       expect(offset).toBe(bytes)
       bytes += byteCount
@@ -42,7 +42,7 @@ describe('parseUrl, while mocking parse, ', () => {
   it.each([0, -1, 1.5, NaN, Infinity])('throws if chunkSize is invalid: %s', async (chunkSize) => {
     const text = 'hello, csvremote!!!'
     const { url, fileSize, revoke } = toUrl(text)
-    const iterator = parseUrl(url, { chunkSize, lastByte: fileSize - 1 })
+    const iterator = parseURL(url, { chunkSize, lastByte: fileSize - 1 })
     await expect(iterator.next()).rejects.toThrow()
     revoke()
   })
@@ -60,7 +60,7 @@ describe('parseUrl, while mocking parse, ', () => {
     const { url, revoke } = toUrl(text)
     let result = ''
     // implicit assertation in the loop: no exceptions thrown
-    for await (const { row } of parseUrl(url, { firstByte, lastByte, parse: parseMock })) {
+    for await (const { row } of parseURL(url, { firstByte, lastByte, parse: parseMock })) {
       result += row[0]
     }
     revoke()
@@ -83,7 +83,7 @@ describe('parseUrl, while mocking parse, ', () => {
   ])('throws for invalid from: %s or lastByte: %s', async (firstByte, lastByte) => {
     const text = 'hello, csvremote!!!'
     const { url, revoke } = toUrl(text)
-    const iterator = parseUrl(url, { chunkSize: 10, firstByte, lastByte })
+    const iterator = parseURL(url, { chunkSize: 10, firstByte, lastByte })
     await expect(iterator.next()).rejects.toThrow()
     revoke()
   })
@@ -92,7 +92,7 @@ describe('parseUrl, while mocking parse, ', () => {
     const text = 'hello, csvremote!!!'
     const { url, revoke } = toUrl(text)
     const controller = new AbortController()
-    const iterator = parseUrl(url, { requestInit: { signal: controller.signal } })
+    const iterator = parseURL(url, { requestInit: { signal: controller.signal } })
     controller.abort()
     await expect(iterator.next()).rejects.toThrow(/abort/i)
     revoke()
@@ -116,7 +116,7 @@ describe('parseUrl, while mocking parse, ', () => {
         },
       }
     }
-    const iterator = parseUrl(url, {
+    const iterator = parseURL(url, {
       chunkSize: 5,
       parse: parseMock,
     })
@@ -128,10 +128,10 @@ describe('parseUrl, while mocking parse, ', () => {
 describe('Papaparse high-level tests', () => {
   PARSE_TESTS.forEach((test) => {
     it(test.description, async () => {
-      const config: Parameters<typeof parseUrl>[1] = test.config || {}
+      const config: Parameters<typeof parseURL>[1] = test.config || {}
       const { url, fileSize, revoke } = toUrl(test.text)
       const result = []
-      for await (const r of parseUrl(url, { ...config, lastByte: fileSize - 1 })) {
+      for await (const r of parseURL(url, { ...config, lastByte: fileSize - 1 })) {
         result.push(r)
       }
       revoke()
@@ -150,9 +150,9 @@ describe('Papaparse high-level tests', () => {
   })
 })
 
-describe('parseUrl', () => {
+describe('parseURL', () => {
   it('throws if URL is invalid', async () => {
-    const iterator = parseUrl('http://invalid.invalid/', { chunkSize: 10 })
+    const iterator = parseURL('http://invalid.invalid/', { chunkSize: 10 })
     await expect(iterator.next()).rejects.toThrow()
   })
   it.for([1, 2, 3, 5, 9, 14])('with known delimiter and newline, accepts chunk size of %s bytes.', async (chunkSize) => {
@@ -160,7 +160,7 @@ describe('parseUrl', () => {
     const { url, fileSize, revoke } = toUrl(text)
     const result = []
     let bytes = 0
-    for await (const { row, meta: { offset, byteCount } } of parseUrl(url, { chunkSize, lastByte: fileSize - 1 })) {
+    for await (const { row, meta: { offset, byteCount } } of parseURL(url, { chunkSize, lastByte: fileSize - 1 })) {
       result.push(row)
       expect(offset).toBe(bytes)
       bytes += byteCount
@@ -173,7 +173,7 @@ describe('parseUrl', () => {
     const text = '\ufeffhello, csvremote!!!'
     const { url, fileSize, revoke } = toUrl(text)
     const result = []
-    for await (const r of parseUrl(url, { stripBOM, lastByte: fileSize - 1 })) {
+    for await (const r of parseURL(url, { stripBOM, lastByte: fileSize - 1 })) {
       result.push(r)
     }
     revoke()

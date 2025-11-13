@@ -1,3 +1,3 @@
 export { parseText } from './text'
-export { parseUrl } from './url'
+export { parseURL } from './url'
 export { testEmptyLine } from './utils'

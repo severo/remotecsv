@@ -2,6 +2,26 @@
 
 Fetch and parse a remote CSV file.
 
+## Install
+
+```bash
+npm install remotecsv
+```
+
+## Usage
+
+To parse a remote CSV file from a URL:
+
+```typescript
+import { parseURL } from 'remotecsv'
+const rows = []
+for await (const { row } of parseURL('https://data.source.coop/severo/csv-papaparse-test-files/sample.csv')) {
+    rows.push(row)
+}
+console.log(rows)
+// Output: [ [ 'A', 'B', 'C' ], [ 'X', 'Y', 'Z' ] ]
+```
+
 ## Thanks
 
 The code is heavily inspired by [Papaparse](https://www.papaparse.com/).
