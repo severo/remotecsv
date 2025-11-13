@@ -103,11 +103,10 @@ export async function* parseUrl(
     }
 
     for (const result of (options.parse ?? parse)(input, {
+      ...parseOptions,
       // the remaining bytes may not contain a full last row
       ignoreLastRow: true,
       stripBOM: isFirstChunk ? stripBOM : false,
-      // pass other options
-      ...parseOptions,
     })) {
       consumedBytes += result.meta.byteCount
       if (consumedBytes > bytes.length) {
@@ -151,32 +150,29 @@ export async function* parseUrl(
     break
   }
 
-  // Parse remaining bytes, if any
-  if (bytes.length > 0) {
-    const input = decoder.decode(bytes)
-    for (const result of (options.parse ?? parse)(input, {
-      // parse until the last byte
-      ignoreLastRow: false,
-      stripBOM: isFirstChunk ? stripBOM : false,
-      // pass other options
-      ...parseOptions,
-    })) {
-      // Add delimiter error to the first result only
-      if (delimiterError) {
-        result.errors.push(delimiterError)
-        delimiterError = undefined
-      }
-      if (skipEmptyLines && testEmptyLine(result.row, skipEmptyLines)) {
-        // TODO(SL) how to report the skipped lines in the metadata?
-        continue
-      }
-      yield {
-        ...result,
-        meta: {
-          ...result.meta,
-          offset: result.meta.offset + cursor,
-        },
-      }
+  // Parse the last row (even if the remaining bytes are empty)
+  const input = decoder.decode(bytes)
+  for (const result of (options.parse ?? parse)(input, {
+    ...parseOptions,
+    // parse until the last byte
+    ignoreLastRow: false,
+    stripBOM: isFirstChunk ? stripBOM : false,
+  })) {
+    // Add delimiter error to the first result only
+    if (delimiterError) {
+      result.errors.push(delimiterError)
+      delimiterError = undefined
+    }
+    if (skipEmptyLines && testEmptyLine(result.row, skipEmptyLines)) {
+      // TODO(SL) how to report the skipped lines in the metadata?
+      continue
+    }
+    yield {
+      ...result,
+      meta: {
+        ...result.meta,
+        offset: result.meta.offset + cursor,
+      },
     }
   }
 }

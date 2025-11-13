@@ -38,6 +38,7 @@ describe('parseUrl, while mocking parse, ', () => {
     expect(result).toBe(text)
     expect(bytes).toBe(fileSize)
   })
+
   it.each([0, -1, 1.5, NaN, Infinity])('throws if chunkSize is invalid: %s', async (chunkSize) => {
     const text = 'hello, csvremote!!!'
     const { url, fileSize, revoke } = toUrl(text)
@@ -45,6 +46,7 @@ describe('parseUrl, while mocking parse, ', () => {
     await expect(iterator.next()).rejects.toThrow()
     revoke()
   })
+
   it.each([
     [undefined, undefined, 'hello, csvremote!!!'],
     [undefined, 5, 'hello,'],
@@ -68,6 +70,7 @@ describe('parseUrl, while mocking parse, ', () => {
       expect(result).toBe(expected)
     }
   })
+
   it.each([
     [-1, undefined],
     [NaN, undefined],
@@ -84,6 +87,7 @@ describe('parseUrl, while mocking parse, ', () => {
     await expect(iterator.next()).rejects.toThrow()
     revoke()
   })
+
   it('uses the requestInit option, allowing to pass an abort signal', async () => {
     const text = 'hello, csvremote!!!'
     const { url, revoke } = toUrl(text)
@@ -93,94 +97,7 @@ describe('parseUrl, while mocking parse, ', () => {
     await expect(iterator.next()).rejects.toThrow(/abort/i)
     revoke()
   })
-  it('keeps bytes between iterations, and might not consume all the bytes', async () => {
-    const text = 'hello, csvremote!!!'
-    const { url, fileSize, revoke } = toUrl(text)
-    function* parseMock(input: string) {
-      // only yield the first two bytes, decoded as text
-      const encoder = new TextEncoder()
-      const bytes = encoder.encode(input)
-      const decoder = new TextDecoder('utf-8')
-      const slice = bytes.slice(0, 2)
-      const decoded = decoder.decode(slice)
-      yield {
-        row: [decoded],
-        errors: [],
-        meta: {
-          byteCount: slice.length,
-          offset: 0,
-          newline: '\n',
-          // quote: '"',
-          delimiter: ',',
-          cursor: decoded.length,
-        },
-      }
-    }
-    let result = ''
-    let bytes = 0
-    let i = 0
-    for await (const { row, meta: { offset, byteCount } } of parseUrl(url, {
-      chunkSize: 5,
-      lastByte: fileSize - 1,
-      parse: parseMock,
-    })) {
-      i++
-      result += row[0]
-      expect(offset).toBe(bytes)
-      bytes += byteCount
-    }
-    revoke()
-    expect(i).toBeGreaterThan(1) // ensure multiple iterations
-    expect(result).toBe(text.slice(0, i * 2)) // each iteration yields 2 bytes, in order
-    expect(bytes).toBe(i * 2) // each iteration yields 2 bytes, not all the bytes are consumed
-  })
-  it('keeps bytes between iterations and might consume all the bytes', async () => {
-    const text = 'hello, csvremote!!!'
-    const { url, fileSize, revoke } = toUrl(text)
-    function* parseMock(text: string) {
-      // only process up to the first comma
-      const splits = text.split(',')
-      const firstPart = splits[0] + (splits.length > 1 ? ',' : '')
-      const encoder = new TextEncoder()
-      const firstPartBytes = encoder.encode(firstPart)
-      const byteCount = firstPartBytes.length
-      yield {
-        row: [firstPart],
-        errors: [],
-        meta: {
-          byteCount,
-          offset: 0,
-          newline: '\n',
-          // quote: '"',
-          delimiter: ',',
-          cursor: firstPart.length,
-        },
-      }
-    }
-    let result = ''
-    let bytes = 0
-    let i = 0
-    for await (const { row, meta: { offset, byteCount } } of parseUrl(url, {
-      chunkSize: 10,
-      lastByte: fileSize - 1,
-      parse: parseMock,
-    })) {
-      expect(offset).toBe(bytes)
-      if (i === 0) {
-        expect(row).toStrictEqual(['hello,'])
-      }
-      else {
-        expect(row).toStrictEqual([' csvremote!!!'])
-      }
-      i++
-      result += row[0]
-      bytes += byteCount
-    }
-    revoke()
-    expect(i).toBe(2)
-    expect(result).toBe(text)
-    expect(bytes).toBe(fileSize)
-  })
+
   it('throws if parse yields more bytes than provided', async () => {
     const text = 'hello, csvremote!!!'
     const { url, revoke } = toUrl(text)

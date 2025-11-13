@@ -55,4 +55,23 @@ describe('parse', () => {
     expect(meta[0]?.byteCount).toBe(7) // 'A\ufeff,B\n' (7 bytes)
     expect(meta[1]?.byteCount).toBe(3) // 'X,Y' (3 bytes)
   })
+
+  it('should return one row with an empty string for empty input', () => {
+    const input = ''
+    const result = [...parse(input, {})]
+    const data = result.map(({ row }) => row)
+    const meta = result.map(({ meta }) => meta)
+    expect(data).toEqual([['']])
+    expect(meta[0]?.byteCount).toBe(0)
+  })
+
+  it('should return two rows with two empty strings for input with only a newline', () => {
+    const input = '\n'
+    const result = [...parse(input, {})]
+    const data = result.map(({ row }) => row)
+    const meta = result.map(({ meta }) => meta)
+    expect(data).toEqual([[''], ['']])
+    expect(meta[0]?.byteCount).toBe(1) // '\n'
+    expect(meta[1]?.byteCount).toBe(0) // ''
+  })
 })

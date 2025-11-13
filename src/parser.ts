@@ -45,10 +45,6 @@ export function* parse(input: string, options: ParseOptions & {
   let lastCursor = 0
   let offset = 0 // Byte offset
 
-  if (!input) {
-    return
-  }
-
   if (stripBOM && input.charCodeAt(0) === 0xfeff) {
     cursor = 1
   }
