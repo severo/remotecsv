@@ -58,7 +58,7 @@ describe('parse', () => {
 
   it('should return one row with an empty string for empty input', () => {
     const input = ''
-    const result = [...parse(input, {})]
+    const result = [...parse(input)]
     const data = result.map(({ row }) => row)
     const meta = result.map(({ meta }) => meta)
     expect(data).toEqual([['']])
@@ -67,11 +67,22 @@ describe('parse', () => {
 
   it('should return two rows with two empty strings for input with only a newline', () => {
     const input = '\n'
-    const result = [...parse(input, {})]
+    const result = [...parse(input)]
     const data = result.map(({ row }) => row)
     const meta = result.map(({ meta }) => meta)
     expect(data).toEqual([[''], ['']])
     expect(meta[0]?.byteCount).toBe(1) // '\n'
     expect(meta[1]?.byteCount).toBe(0) // ''
+  })
+  it.each([
+    { description: 'closed', input: 'a,b,"c"' },
+    { description: 'not closed', input: 'a,b,"c' },
+  ])('returns without the last row, if the quote is $description', ({ input }) => {
+    // this test is really only to please the coverage gods
+    const result = [...parse(input, { ignoreLastRow: true })]
+    const data = result.map(({ row }) => row)
+    const errors = result.flatMap(({ errors: rowErrors }, row) => rowErrors.map(error => ({ ...error, row })))
+    expect(data).toEqual([])
+    expect(errors).toEqual([])
   })
 })

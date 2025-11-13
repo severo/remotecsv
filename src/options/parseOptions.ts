@@ -84,22 +84,22 @@ export interface ValidParseOptions {
  * @param parseOptions.comments The comment character or boolean to indicate comments.
  * @returns The validated options
  */
-export function validateAndSetDefaultParseOptions(parseOptions: ParseOptions): ValidParseOptions {
-  const quoteChar = validateQuoteChar(parseOptions.quoteChar)
-  const escapeChar = validateEscapeChar(parseOptions.escapeChar) ?? quoteChar
+export function validateAndSetDefaultParseOptions(parseOptions?: ParseOptions): ValidParseOptions {
+  const quoteChar = validateQuoteChar(parseOptions?.quoteChar)
+  const escapeChar = validateEscapeChar(parseOptions?.escapeChar) ?? quoteChar
 
   // Delimiter must be valid
   // TODO(SL): it now throws if invalid delimiter is provided instead of defaulting to ,
-  const delimiter = validateDelimiter(parseOptions.delimiter) ?? ','
+  const delimiter = validateDelimiter(parseOptions?.delimiter) ?? ','
 
   // Comment character must be valid
   // TODO(SL): it now throws if invalid comment character is provided instead of defaulting to false
-  const comments = validateComments(parseOptions.comments, delimiter) ?? false
+  const comments = validateComments(parseOptions?.comments, delimiter) ?? false
 
   // Newline must be valid: \r, \n, or \r\n
   // TODO(SL): it now throws if invalid newline is provided instead of defaulting to \n
   // TODO(SL): force newline to have the correct type?
-  const newline = validateNewline(parseOptions.newline) ?? '\n'
+  const newline = validateNewline(parseOptions?.newline) ?? '\n'
 
   return {
     delimiter,

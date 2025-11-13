@@ -20,7 +20,7 @@ import { escapeRegExp } from './utils'
 export function* parse(input: string, options: ParseOptions & {
   ignoreLastRow?: boolean
   stripBOM?: boolean
-}): Generator<ParseResult, void, unknown> {
+} = {}): Generator<ParseResult, void, unknown> {
   const {
     delimiter,
     newline,
@@ -28,8 +28,8 @@ export function* parse(input: string, options: ParseOptions & {
     quoteChar,
     escapeChar,
   } = validateAndSetDefaultParseOptions(options)
-  const ignoreLastRow = options.ignoreLastRow ?? false
-  const stripBOM = options.stripBOM ?? true
+  const ignoreLastRow = options?.ignoreLastRow ?? false
+  const stripBOM = options?.stripBOM ?? true
 
   // We don't need to compute some of these every time parse() is called,
   // but having them in a more local scope seems to perform better
@@ -70,16 +70,14 @@ export function* parse(input: string, options: ParseOptions & {
 
         // No other quotes are found - no other delimiters
         if (quoteSearch === -1) {
-          if (!ignoreLastRow) {
-            // No closing quote... what a pity
-            errors.push({
-              type: 'Quotes',
-              code: 'MissingQuotes',
-              message: 'Quoted field unterminated',
-              // row: data.length, // row has yet to be inserted
-              index: cursor,
-            })
-          }
+          // No closing quote... what a pity
+          errors.push({
+            type: 'Quotes',
+            code: 'MissingQuotes',
+            message: 'Quoted field unterminated',
+            // row: data.length, // row has yet to be inserted
+            index: cursor,
+          })
           const last = finish()
           if (last) {
             yield last
