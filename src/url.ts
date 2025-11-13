@@ -2,7 +2,7 @@ import { fetchChunk } from './fetch'
 import { checkIntegerGreaterOrEqualThan } from './options/check'
 import { defaultChunkSize } from './options/constants'
 import { type DelimiterError, type ParseOptions, validateAndGuessParseOptions } from './options/parseOptions'
-import { parseString } from './string'
+import { parse } from './parser'
 import type { ParseResult } from './types'
 import { testEmptyLine } from './utils'
 
@@ -12,7 +12,7 @@ interface FetchOptions {
   lastByte?: number
   requestInit?: RequestInit
   fetchChunk?: typeof fetchChunk
-  parseString?: typeof parseString
+  parse?: typeof parse
 }
 interface ParseUrlOptions extends ParseOptions, FetchOptions {
   skipEmptyLines?: boolean | 'greedy'
@@ -28,7 +28,7 @@ interface ParseUrlOptions extends ParseOptions, FetchOptions {
  * @param options.lastByte The last byte parsed (inclusive). It must be a non-negative integer. Default is the end of the file.
  * @param options.requestInit Optional fetch request initialization parameters.
  * @param options.fetchChunk Optional custom fetchChunk function for fetching chunks.
- * @param options.parseString Optional custom parseString function for parsing a string.
+ * @param options.parse Optional custom parse function for parsing a string.
  * @param options.delimiter The delimiter used in the CSV data. Defaults to ','.
  * @param options.newline The newline used in the CSV data. Defaults to '\n'.
  * @param options.quoteChar The quote character used in the CSV data. Defaults to '"'.
@@ -96,13 +96,11 @@ export async function* parseUrl(
       delimiterError = result.error
     }
 
-    for (const result of (options.parseString ?? parseString)(input, {
+    for (const result of (options.parse ?? parse)(input, {
       // the remaining bytes may not contain a full last row
       ignoreLastRow: true,
       // pass other options
       ...parseOptions,
-      // handle the empty lines here, to avoid issues when guessing delimiter/newline + to get the correct offsets
-      skipEmptyLines: false,
     })) {
       consumedBytes += result.meta.byteCount
       if (consumedBytes > bytes.length) {
@@ -148,14 +146,16 @@ export async function* parseUrl(
   // Parse remaining bytes, if any
   if (bytes.length > 0) {
     const input = decoder.decode(bytes)
-    for (const result of (options.parseString ?? parseString)(input, {
+    for (const result of (options.parse ?? parse)(input, {
       // parse until the last byte
       ignoreLastRow: false,
       // pass other options
       ...parseOptions,
-      // TODO(SL): should we skip the empty lines here as well?
-      skipEmptyLines,
     })) {
+      if (skipEmptyLines && testEmptyLine(result.row, skipEmptyLines)) {
+        // TODO(SL) how to report the skipped lines in the metadata?
+        continue
+      }
       yield {
         ...result,
         meta: {

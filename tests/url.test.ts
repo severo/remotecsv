@@ -5,7 +5,7 @@ import { parseUrl } from '../src/url'
 import { toUrl } from '../src/utils'
 import { PARSE_TESTS } from './cases'
 
-function* parseStringMock(input: string): Generator<ParseResult, void, unknown> {
+function* parseMock(input: string): Generator<ParseResult, void, unknown> {
   const encoder = new TextEncoder()
   const bytes = encoder.encode(input)
   yield {
@@ -29,7 +29,7 @@ describe('parseUrl, while mocking parseString, ', () => {
     let result = ''
     let bytes = 0
     // passing 'to: fileSize - 1' for Node.js bug: https://github.com/nodejs/node/issues/60382
-    for await (const { row, meta: { offset, byteCount } } of parseUrl(url, { chunkSize, lastByte: fileSize - 1, parseString: parseStringMock })) {
+    for await (const { row, meta: { offset, byteCount } } of parseUrl(url, { chunkSize, lastByte: fileSize - 1, parse: parseMock })) {
       result += row
       expect(offset).toBe(bytes)
       bytes += byteCount
@@ -58,7 +58,7 @@ describe('parseUrl, while mocking parseString, ', () => {
     const { url, revoke } = toUrl(text)
     let result = ''
     // implicit assertation in the loop: no exceptions thrown
-    for await (const { row } of parseUrl(url, { firstByte, lastByte, parseString: parseStringMock })) {
+    for await (const { row } of parseUrl(url, { firstByte, lastByte, parse: parseMock })) {
       result += row[0]
     }
     revoke()
@@ -96,7 +96,7 @@ describe('parseUrl, while mocking parseString, ', () => {
   it('keeps bytes between iterations, and might not consume all the bytes', async () => {
     const text = 'hello, csvremote!!!'
     const { url, fileSize, revoke } = toUrl(text)
-    function* parseStringMock(input: string) {
+    function* parseMock(input: string) {
       // only yield the first two bytes, decoded as text
       const encoder = new TextEncoder()
       const bytes = encoder.encode(input)
@@ -122,7 +122,7 @@ describe('parseUrl, while mocking parseString, ', () => {
     for await (const { row, meta: { offset, byteCount } } of parseUrl(url, {
       chunkSize: 5,
       lastByte: fileSize - 1,
-      parseString: parseStringMock,
+      parse: parseMock,
     })) {
       i++
       result += row[0]
@@ -137,7 +137,7 @@ describe('parseUrl, while mocking parseString, ', () => {
   it('keeps bytes between iterations and might consume all the bytes', async () => {
     const text = 'hello, csvremote!!!'
     const { url, fileSize, revoke } = toUrl(text)
-    function* parseStringMock(text: string) {
+    function* parseMock(text: string) {
       // only process up to the first comma
       const splits = text.split(',')
       const firstPart = splits[0] + (splits.length > 1 ? ',' : '')
@@ -163,7 +163,7 @@ describe('parseUrl, while mocking parseString, ', () => {
     for await (const { row, meta: { offset, byteCount } } of parseUrl(url, {
       chunkSize: 10,
       lastByte: fileSize - 1,
-      parseString: parseStringMock,
+      parse: parseMock,
     })) {
       expect(offset).toBe(bytes)
       if (i === 0) {
@@ -184,7 +184,7 @@ describe('parseUrl, while mocking parseString, ', () => {
   it('throws if parseString yields more bytes than provided', async () => {
     const text = 'hello, csvremote!!!'
     const { url, revoke } = toUrl(text)
-    function* parseStringMock(text: string) {
+    function* parseMock(text: string) {
       // yield more bytes than provided
       yield {
         row: [],
@@ -201,7 +201,7 @@ describe('parseUrl, while mocking parseString, ', () => {
     }
     const iterator = parseUrl(url, {
       chunkSize: 5,
-      parseString: parseStringMock,
+      parse: parseMock,
     })
     await expect(iterator.next()).rejects.toThrow()
     revoke()

@@ -20,7 +20,6 @@ export function* parse(input: string, options: ParseOptions & {
     quoteChar,
     escapeChar,
   } = validateAndSetDefaultParseOptions(options)
-  // TODO(SL): allow passing no options?
   const ignoreLastRow = options.ignoreLastRow ?? false
 
   // We don't need to compute some of these every time parse() is called,
