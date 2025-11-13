@@ -22,7 +22,7 @@ function* parseMock(input: string): Generator<ParseResult, void, unknown> {
   }
 }
 
-describe('parseUrl, while mocking parseString, ', () => {
+describe('parseUrl, while mocking parse, ', () => {
   it.each([1, 2, 3, 10, 17, 18, 19, 20, 21, 1_000, undefined])('accepts chunk size of %s', async (chunkSize) => {
     const text = 'hello, csvremote!!!' // length: 19
     const { url, fileSize, revoke } = toUrl(text)
@@ -181,7 +181,7 @@ describe('parseUrl, while mocking parseString, ', () => {
     expect(result).toBe(text)
     expect(bytes).toBe(fileSize)
   })
-  it('throws if parseString yields more bytes than provided', async () => {
+  it('throws if parse yields more bytes than provided', async () => {
     const text = 'hello, csvremote!!!'
     const { url, revoke } = toUrl(text)
     function* parseMock(text: string) {
