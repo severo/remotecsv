@@ -149,3 +149,24 @@ describe('Papaparse high-level tests', () => {
     })
   })
 })
+
+describe('parseUrl', () => {
+  it('throws if URL is invalid', async () => {
+    const iterator = parseUrl('http://invalid.invalid/', { chunkSize: 10 })
+    await expect(iterator.next()).rejects.toThrow()
+  })
+  it.for([1, 2, 3, 5, 9, 14])('with known delimiter and newline, accepts chunk size of %s bytes.', async (chunkSize) => {
+    const text = 'a,b,c\n1,2,3\n4,5,6\n7,8,9\na,b,c\n1,2,3\n4,5,6\n7,8,9\na,b,c\n1,2,3\n4,5,6\n7,8,9\n'
+    const { url, fileSize, revoke } = toUrl(text)
+    const result = []
+    let bytes = 0
+    for await (const { row, meta: { offset, byteCount } } of parseUrl(url, { chunkSize, lastByte: fileSize - 1 })) {
+      result.push(row)
+      expect(offset).toBe(bytes)
+      bytes += byteCount
+    }
+    revoke()
+    expect(result).toEqual(text.split('\n').map(line => line.split(',')))
+    expect(bytes).toBe(fileSize)
+  })
+})
