@@ -854,7 +854,7 @@ export const PARSE_TESTS = [
   {
     description: 'Blank line at beginning',
     input: '\r\na,b,c\r\nd,e,f',
-    config: { newline: '\r\n' },
+    config: { newline: '\r\n' as const },
     expected: {
       data: [[''], ['a', 'b', 'c'], ['d', 'e', 'f']],
       errors: [],
@@ -863,7 +863,7 @@ export const PARSE_TESTS = [
   {
     description: 'Blank line in middle',
     input: 'a,b,c\r\n\r\nd,e,f',
-    config: { newline: '\r\n' },
+    config: { newline: '\r\n' as const },
     expected: {
       data: [['a', 'b', 'c'], [''], ['d', 'e', 'f']],
       errors: [],

@@ -2,12 +2,12 @@ import { validateComments } from './comments'
 import { DefaultDelimiter } from './constants'
 import { guessDelimiter, validateDelimiter } from './delimiter'
 import { validateEscapeChar } from './escapeChar'
-import { guessLineEndings, validateNewline } from './newline'
+import { guessLineEndings, type Newline, validateNewline } from './newline'
 import { validateQuoteChar } from './quoteChar'
 
 export interface ParseOptions {
   delimiter?: string
-  newline?: string
+  newline?: Newline
   quoteChar?: string
   escapeChar?: string
   comments?: boolean | string
@@ -89,16 +89,14 @@ export function validateAndSetDefaultParseOptions(parseOptions?: ParseOptions): 
   const escapeChar = validateEscapeChar(parseOptions?.escapeChar) ?? quoteChar
 
   // Delimiter must be valid
-  // TODO(SL): it now throws if invalid delimiter is provided instead of defaulting to ,
+  // Throws if delimiter is invalid (PapaParse defaults to ",")
   const delimiter = validateDelimiter(parseOptions?.delimiter) ?? ','
 
   // Comment character must be valid
-  // TODO(SL): it now throws if invalid comment character is provided instead of defaulting to false
+  // Throws if comment character is invalid (defaults to false)
   const comments = validateComments(parseOptions?.comments, delimiter) ?? false
 
-  // Newline must be valid: \r, \n, or \r\n
-  // TODO(SL): it now throws if invalid newline is provided instead of defaulting to \n
-  // TODO(SL): force newline to have the correct type?
+  // Newline must be: \r, \n, or \r\n (enforced by type system). Defaults to \n.
   const newline = validateNewline(parseOptions?.newline) ?? '\n'
 
   return {

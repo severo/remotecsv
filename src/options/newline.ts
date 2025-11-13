@@ -1,19 +1,14 @@
 import { escapeRegExp } from '../utils'
 
-type Newline = '\n' | '\r' | '\r\n'
+export type Newline = '\n' | '\r' | '\r\n'
 
 /**
  * Returns the newline string to be used in parsing.
  * @param newline The newline string to validate.
  * @returns The newline string.
  */
-export function validateNewline(newline?: string): Newline | undefined {
-  if (newline === undefined) {
-    return undefined
-  }
-  if (newline !== '\n' && newline !== '\r' && newline !== '\r\n') {
-    throw new Error(`Invalid newline: ${newline}`)
-  }
+export function validateNewline(newline?: Newline): Newline | undefined {
+  // Nothing to validate, thanks to the type system
   return newline
 }
 

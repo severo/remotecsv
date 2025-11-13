@@ -82,11 +82,6 @@ export async function* parseUrl(
       bytes = chunkBytes
     }
     else {
-      // TODO(SL): are the following TODOs overkill?
-      // TODO(SL): avoid copying?
-      // TODO(SL): consider using a buffer pool: https://medium.com/@artemkhrenov/sharedarraybuffer-and-memory-management-in-javascript-06738cda8f51
-      // TODO(SL): throw if the allocated memory is above some limit?
-      // TODO(SL): avoid decoding the same bytes multiple times?
       const combinedBytes = new Uint8Array(bytes.length + chunkBytes.length)
       combinedBytes.set(bytes, 0)
       combinedBytes.set(chunkBytes, bytes.length)

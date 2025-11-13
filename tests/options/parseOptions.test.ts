@@ -15,7 +15,7 @@ describe('validateAndSetDefaultParseOptions', () => {
   it('should return the same options if all are provided', () => {
     const inputOptions = {
       delimiter: ';',
-      newline: '\r\n',
+      newline: '\r\n' as const,
       quoteChar: '\'',
       escapeChar: '\\',
       comments: '#',

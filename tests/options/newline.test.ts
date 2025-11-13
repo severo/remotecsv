@@ -12,12 +12,6 @@ describe('validateNewline', () => {
     expect(validateNewline('\r')).toBe('\r')
     expect(validateNewline('\r\n')).toBe('\r\n')
   })
-
-  it('should throw an error for invalid newline', () => {
-    expect(() => validateNewline('invalid')).toThrow('Invalid newline: invalid')
-    expect(() => validateNewline('')).toThrow('Invalid newline: ')
-    expect(() => validateNewline(' ')).toThrow('Invalid newline:  ')
-  })
 })
 
 describe('guessLineEndings', () => {
