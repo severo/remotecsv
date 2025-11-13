@@ -8,8 +8,6 @@ type Newline = '\n' | '\r' | '\r\n'
  * @returns The newline string.
  */
 export function validateNewline(newline?: string): Newline | undefined {
-  // TODO(SL): make the newline configurable
-  // TODO(SL): guess the newline from the first chunk
   if (newline === undefined) {
     return undefined
   }

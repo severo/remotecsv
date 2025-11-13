@@ -1309,3 +1309,235 @@ export const PARSE_TESTS = [
     },
   },
 ]
+
+// export const CUSTOM_TESTS = [
+//   {
+//     description: 'Step is called for each row',
+//     expected: 2,
+//     run: function (callback) {
+//       let callCount = 0
+//       Papa.parse('A,b,c\nd,E,f', {
+//         step: function () {
+//           callCount++
+//         },
+//         complete: function () {
+//           callback(callCount)
+//         },
+//       })
+//     },
+//   },
+//   {
+//     description: 'Data is correctly parsed with steps',
+//     expected: [['A', 'b', 'c'], ['d', 'E', 'f']],
+//     run: function (callback) {
+//       const data = []
+//       Papa.parse('A,b,c\nd,E,f', {
+//         step: function (results) {
+//           data.push(results.data)
+//         },
+//         complete: function () {
+//           callback(data)
+//         },
+//       })
+//     },
+//   },
+//   {
+//     description: 'Data is correctly parsed with steps (headers)',
+//     expected: [{ One: 'A', Two: 'b', Three: 'c' }, { One: 'd', Two: 'E', Three: 'f' }],
+//     run: function (callback) {
+//       const data = []
+//       Papa.parse('One,Two,Three\nA,b,c\nd,E,f', {
+//         header: true,
+//         step: function (results) {
+//           data.push(results.data)
+//         },
+//         complete: function () {
+//           callback(data)
+//         },
+//       })
+//     },
+//   },
+//   {
+//     description: 'Data is correctly parsed with steps when skipping empty lines',
+//     expected: [['A', 'b', 'c'], ['d', 'E', 'f']],
+//     run: function (callback) {
+//       const data = []
+//       Papa.parse('A,b,c\n\nd,E,f', {
+//         skipEmptyLines: true,
+//         step: function (results) {
+//           data.push(results.data)
+//         },
+//         complete: function () {
+//           callback(data)
+//         },
+//       })
+//     },
+//   },
+//   {
+//     description: 'Data is correctly parsed with steps when there are empty values',
+//     expected: [{ A: 'a', B: 'b', C: 'c', D: 'd' }, { A: 'a', B: '', C: '', D: '' }],
+//     run: function (callback) {
+//       const data = []
+//       Papa.parse('A,B,C,D\na,b,c,d\na,,,', {
+//         header: true,
+//         step: function (results) {
+//           data.push(results.data)
+//         },
+//         complete: function () {
+//           callback(data)
+//         },
+//       })
+//     },
+//   },
+//   {
+//     description: 'Step is called with the contents of the row',
+//     expected: ['A', 'b', 'c'],
+//     run: function (callback) {
+//       Papa.parse('A,b,c', {
+//         step: function (response) {
+//           callback(response.data)
+//         },
+//       })
+//     },
+//   },
+//   {
+//     description: 'Step is called with the last cursor position',
+//     expected: [6, 12, 17],
+//     run: function (callback) {
+//       const updates = []
+//       Papa.parse('A,b,c\nd,E,f\nG,h,i', {
+//         step: function (response) {
+//           updates.push(response.meta.cursor)
+//         },
+//         complete: function () {
+//           callback(updates)
+//         },
+//       })
+//     },
+//   },
+//   {
+//     description: 'Step exposes cursor for downloads',
+// eslint-disable-next-line @stylistic/no-tabs
+//     expected: [129,	287, 452, 595, 727, 865, 1031, 1209],
+//     disabled: !XHR_ENABLED,
+//     run: function (callback) {
+//       const updates = []
+//       Papa.parse(BASE_PATH + 'long-sample.csv', {
+//         download: true,
+//         step: function (response) {
+//           updates.push(response.meta.cursor)
+//         },
+//         complete: function () {
+//           callback(updates)
+//         },
+//       })
+//     },
+//   },
+//   {
+//     description: 'Step exposes cursor for chunked downloads',
+// eslint-disable-next-line @stylistic/no-tabs
+//     expected: [129,	287, 452, 595, 727, 865, 1031, 1209],
+//     disabled: !XHR_ENABLED,
+//     run: function (callback) {
+//       const updates = []
+//       Papa.parse(BASE_PATH + 'long-sample.csv', {
+//         download: true,
+//         chunkSize: 500,
+//         step: function (response) {
+//           updates.push(response.meta.cursor)
+//         },
+//         complete: function () {
+//           callback(updates)
+//         },
+//       })
+//     },
+//   },
+//   {
+//     description: 'Quoted line breaks near chunk boundaries are handled',
+//     expected: [['A', 'B', 'C'], ['X', 'Y\n1\n2\n3', 'Z']],
+//     run: function (callback) {
+//       const updates = []
+//       Papa.parse('A,B,C\nX,"Y\n1\n2\n3",Z', {
+//         chunkSize: 3,
+//         step: function (response) {
+//           updates.push(response.data)
+//         },
+//         complete: function () {
+//           callback(updates)
+//         },
+//       })
+//     },
+//   },
+//   {
+//     description: 'Step functions can abort parsing',
+//     expected: [['A', 'b', 'c']],
+//     run: function (callback) {
+//       const updates = []
+//       Papa.parse('A,b,c\nd,E,f\nG,h,i', {
+//         step: function (response, handle) {
+//           updates.push(response.data)
+//           handle.abort()
+//           callback(updates)
+//         },
+//         chunkSize: 6,
+//       })
+//     },
+//   },
+//   {
+//     description: 'Complete is called after aborting',
+//     expected: true,
+//     run: function (callback) {
+//       Papa.parse('A,b,c\nd,E,f\nG,h,i', {
+//         step: function (response, handle) {
+//           handle.abort()
+//         },
+//         chunkSize: 6,
+//         complete: function () {
+//           callback(true)
+//         },
+//       })
+//     },
+//   },
+//   {
+//     description: 'Should correctly guess custom delimiter when passed delimiters to guess.',
+//     expected: '~',
+//     run: function (callback) {
+//       Papa.parse('"A"~"B"~"C"~"D"', {
+//         delimitersToGuess: ['~', '@', '%'],
+//         step: function (response, handle) {
+//           handle.abort()
+//           callback(response.meta.delimiter)
+//         },
+//       })
+//     },
+//   },
+//   {
+//     description: 'Should still correctly guess default delimiters when delimiters to guess are not given.',
+//     expected: ',',
+//     run: function (callback) {
+//       Papa.parse('"A","B","C","D"', {
+//         step: function (response, handle) {
+//           handle.abort()
+//           callback(response.meta.delimiter)
+//         },
+//       })
+//     },
+//   },
+//   {
+//     description: 'Data is correctly parsed with chunks and duplicated headers',
+//     expected: [{ h0: 'a', h1: 'a' }, { h0: 'b', h1: 'b' }],
+//     run: function (callback) {
+//       const data = []
+//       Papa.parse('h0,h1\na,a\nb,b', {
+//         header: true,
+//         chunkSize: 10,
+//         step: function (results) {
+//           data.push(results.data)
+//         },
+//         complete: function () {
+//           callback(data)
+//         },
+//       })
+//     },
+//   },
+// ]

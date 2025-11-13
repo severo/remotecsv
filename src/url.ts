@@ -1,16 +1,22 @@
 import { checkIntegerGreaterOrEqualThan } from './check'
-import { parseChunk, type ParseChunkOptions } from './chunk'
 import { defaultChunkSize } from './constants'
 import { fetchChunk } from './fetch'
+import { type DelimiterError, type ParseOptions, validateAndGuessParseOptions } from './parseOptions'
+import { parseString } from './string'
 import type { ParseResult } from './types'
+import { testEmptyLine } from './utils'
 
-interface ParseUrlOptions extends ParseChunkOptions {
+interface FetchOptions {
   chunkSize?: number
   firstByte?: number
   lastByte?: number
   requestInit?: RequestInit
   fetchChunk?: typeof fetchChunk
-  parseChunk?: typeof parseChunk
+  parseString?: typeof parseString
+}
+interface ParseUrlOptions extends ParseOptions, FetchOptions {
+  skipEmptyLines?: boolean | 'greedy'
+  delimitersToGuess?: string[]
 }
 
 /**
@@ -22,7 +28,14 @@ interface ParseUrlOptions extends ParseChunkOptions {
  * @param options.lastByte The last byte parsed (inclusive). It must be a non-negative integer. Default is the end of the file.
  * @param options.requestInit Optional fetch request initialization parameters.
  * @param options.fetchChunk Optional custom fetchChunk function for fetching chunks.
- * @param options.parseChunk Optional custom parseChunk function for parsing chunks.
+ * @param options.parseString Optional custom parseString function for parsing a string.
+ * @param options.delimiter The delimiter used in the CSV data. Defaults to ','.
+ * @param options.newline The newline used in the CSV data. Defaults to '\n'.
+ * @param options.quoteChar The quote character used in the CSV data. Defaults to '"'.
+ * @param options.escapeChar The escape character used in the CSV data. Defaults to the quote character.
+ * @param options.comments The comment character or boolean to indicate comments
+ * @param options.delimitersToGuess The list of delimiters to guess from
+ * @param options.skipEmptyLines Whether to skip empty lines, if so, whether 'greedy' or not. Defaults to false.
  * @yields Parsed rows along with metadata.
  * @returns An async generator that yields parsed rows.
  */
@@ -35,16 +48,11 @@ export async function* parseUrl(
   let firstByte = checkIntegerGreaterOrEqualThan(options.firstByte, 0) ?? 0
   let lastByte = checkIntegerGreaterOrEqualThan(options.lastByte, -1)
 
-  const parseOptions = {
-    delimiter: options.delimiter,
-    newline: options.newline,
-    quoteChar: options.quoteChar,
-    escapeChar: options.escapeChar,
-    comments: options.comments,
-    delimitersToGuess: options.delimitersToGuess ? [...options.delimitersToGuess] : undefined,
-    skipEmptyLines: options.skipEmptyLines,
-  }
+  const { delimitersToGuess, skipEmptyLines } = options
+  let parseOptions: ParseOptions | undefined = undefined
+  let delimiterError: DelimiterError | undefined = undefined
 
+  const decoder = new TextDecoder('utf-8')
   let cursor = firstByte
   let bytes: Uint8Array<ArrayBufferLike> = new Uint8Array(0)
   while (true) {
@@ -80,19 +88,35 @@ export async function* parseUrl(
     }
 
     let consumedBytes = 0
-    for (const result of (options.parseChunk ?? parseChunk)(bytes, {
+    const input = decoder.decode(bytes)
+
+    if (!parseOptions) {
+      const result = validateAndGuessParseOptions(options, { input, skipEmptyLines, delimitersToGuess })
+      parseOptions = result.parseOptions
+      delimiterError = result.error
+    }
+
+    for (const result of (options.parseString ?? parseString)(input, {
       // the remaining bytes may not contain a full last row
       ignoreLastRow: true,
       // pass other options
       ...parseOptions,
+      // handle the empty lines here, to avoid issues when guessing delimiter/newline + to get the correct offsets
+      skipEmptyLines: false,
     })) {
       consumedBytes += result.meta.byteCount
       if (consumedBytes > bytes.length) {
         throw new Error('Invalid state: consumedBytes exceeds bytes length')
       }
-      // Update the options
-      parseOptions.delimiter = result.meta.delimiter
-      parseOptions.newline = result.meta.newline
+      // Add delimiter error to the first result only
+      if (delimiterError) {
+        result.errors.push(delimiterError)
+        delimiterError = undefined
+      }
+      if (skipEmptyLines && testEmptyLine(result.row, skipEmptyLines)) {
+        // TODO(SL) how to report the skipped lines in the metadata?
+        continue
+      }
       // Yield the result with updated offset
       yield {
         ...result,
@@ -123,11 +147,14 @@ export async function* parseUrl(
 
   // Parse remaining bytes, if any
   if (bytes.length > 0) {
-    for (const result of (options.parseChunk ?? parseChunk)(bytes, {
+    const input = decoder.decode(bytes)
+    for (const result of (options.parseString ?? parseString)(input, {
       // parse until the last byte
       ignoreLastRow: false,
       // pass other options
       ...parseOptions,
+      // TODO(SL): should we skip the empty lines here as well?
+      skipEmptyLines,
     })) {
       yield {
         ...result,

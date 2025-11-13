@@ -11,7 +11,6 @@ export default defineConfig({
         },
       },
       {
-
         test: {
           name: 'browser',
           browser: {

@@ -1,14 +1,15 @@
-import { describe, expect, it, test } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 import type { ParseResult } from '../src/types'
 import { parseUrl } from '../src/url'
 import { toUrl } from '../src/utils'
+import { PARSE_TESTS } from './cases'
 
-function* parseChunkMock(bytes: Uint8Array): Generator<ParseResult, void, unknown> {
-  const decoder = new TextDecoder('utf-8')
-  const decoded = decoder.decode(bytes)
+function* parseStringMock(input: string): Generator<ParseResult, void, unknown> {
+  const encoder = new TextEncoder()
+  const bytes = encoder.encode(input)
   yield {
-    row: [decoded],
+    row: [input],
     errors: [],
     meta: {
       byteCount: bytes.length,
@@ -16,19 +17,19 @@ function* parseChunkMock(bytes: Uint8Array): Generator<ParseResult, void, unknow
       newline: '\n',
       // quote: '"',
       delimiter: ',',
-      cursor: decoded.length,
+      cursor: input.length,
     },
   }
 }
 
-describe('parseUrl, while mocking parseChunk, ', () => {
-  test.each([1, 2, 3, 10, 17, 18, 19, 20, 21, 1_000, undefined])('accepts chunk size of %s', async (chunkSize) => {
+describe('parseUrl, while mocking parseString, ', () => {
+  it.each([1, 2, 3, 10, 17, 18, 19, 20, 21, 1_000, undefined])('accepts chunk size of %s', async (chunkSize) => {
     const text = 'hello, csvremote!!!' // length: 19
     const { url, fileSize, revoke } = toUrl(text)
     let result = ''
     let bytes = 0
     // passing 'to: fileSize - 1' for Node.js bug: https://github.com/nodejs/node/issues/60382
-    for await (const { row, meta: { offset, byteCount } } of parseUrl(url, { chunkSize, lastByte: fileSize - 1, parseChunk: parseChunkMock })) {
+    for await (const { row, meta: { offset, byteCount } } of parseUrl(url, { chunkSize, lastByte: fileSize - 1, parseString: parseStringMock })) {
       result += row
       expect(offset).toBe(bytes)
       bytes += byteCount
@@ -37,14 +38,14 @@ describe('parseUrl, while mocking parseChunk, ', () => {
     expect(result).toBe(text)
     expect(bytes).toBe(fileSize)
   })
-  test.each([0, -1, 1.5, NaN, Infinity])('throws if chunkSize is invalid: %s', async (chunkSize) => {
+  it.each([0, -1, 1.5, NaN, Infinity])('throws if chunkSize is invalid: %s', async (chunkSize) => {
     const text = 'hello, csvremote!!!'
     const { url, fileSize, revoke } = toUrl(text)
     const iterator = parseUrl(url, { chunkSize, lastByte: fileSize - 1 })
     await expect(iterator.next()).rejects.toThrow()
     revoke()
   })
-  test.each([
+  it.each([
     [undefined, undefined, 'hello, csvremote!!!'],
     [undefined, 5, 'hello,'],
     [1, undefined, 'ello, csvremote!!!'],
@@ -57,7 +58,7 @@ describe('parseUrl, while mocking parseChunk, ', () => {
     const { url, revoke } = toUrl(text)
     let result = ''
     // implicit assertation in the loop: no exceptions thrown
-    for await (const { row } of parseUrl(url, { firstByte, lastByte, parseChunk: parseChunkMock })) {
+    for await (const { row } of parseUrl(url, { firstByte, lastByte, parseString: parseStringMock })) {
       result += row[0]
     }
     revoke()
@@ -67,7 +68,7 @@ describe('parseUrl, while mocking parseChunk, ', () => {
       expect(result).toBe(expected)
     }
   })
-  test.each([
+  it.each([
     [-1, undefined],
     [NaN, undefined],
     [Infinity, undefined],
@@ -95,8 +96,10 @@ describe('parseUrl, while mocking parseChunk, ', () => {
   it('keeps bytes between iterations, and might not consume all the bytes', async () => {
     const text = 'hello, csvremote!!!'
     const { url, fileSize, revoke } = toUrl(text)
-    function* parseChunkMock(bytes: Uint8Array) {
+    function* parseStringMock(input: string) {
       // only yield the first two bytes, decoded as text
+      const encoder = new TextEncoder()
+      const bytes = encoder.encode(input)
       const decoder = new TextDecoder('utf-8')
       const slice = bytes.slice(0, 2)
       const decoded = decoder.decode(slice)
@@ -119,7 +122,7 @@ describe('parseUrl, while mocking parseChunk, ', () => {
     for await (const { row, meta: { offset, byteCount } } of parseUrl(url, {
       chunkSize: 5,
       lastByte: fileSize - 1,
-      parseChunk: parseChunkMock,
+      parseString: parseStringMock,
     })) {
       i++
       result += row[0]
@@ -134,10 +137,8 @@ describe('parseUrl, while mocking parseChunk, ', () => {
   it('keeps bytes between iterations and might consume all the bytes', async () => {
     const text = 'hello, csvremote!!!'
     const { url, fileSize, revoke } = toUrl(text)
-    function* parseChunkMock(bytes: Uint8Array) {
+    function* parseStringMock(text: string) {
       // only process up to the first comma
-      const decoder = new TextDecoder('utf-8')
-      const text = decoder.decode(bytes)
       const splits = text.split(',')
       const firstPart = splits[0] + (splits.length > 1 ? ',' : '')
       const encoder = new TextEncoder()
@@ -162,7 +163,7 @@ describe('parseUrl, while mocking parseChunk, ', () => {
     for await (const { row, meta: { offset, byteCount } } of parseUrl(url, {
       chunkSize: 10,
       lastByte: fileSize - 1,
-      parseChunk: parseChunkMock,
+      parseString: parseStringMock,
     })) {
       expect(offset).toBe(bytes)
       if (i === 0) {
@@ -180,16 +181,16 @@ describe('parseUrl, while mocking parseChunk, ', () => {
     expect(result).toBe(text)
     expect(bytes).toBe(fileSize)
   })
-  it('throws if parseChunk yields more bytes than provided', async () => {
+  it('throws if parseString yields more bytes than provided', async () => {
     const text = 'hello, csvremote!!!'
     const { url, revoke } = toUrl(text)
-    function* parseChunkMock(bytes: Uint8Array) {
+    function* parseStringMock(text: string) {
       // yield more bytes than provided
       yield {
         row: [],
         errors: [],
         meta: {
-          byteCount: 2 * bytes.length,
+          byteCount: 2 * text.length,
           offset: 0,
           newline: '\n',
           // quote: '"',
@@ -200,9 +201,34 @@ describe('parseUrl, while mocking parseChunk, ', () => {
     }
     const iterator = parseUrl(url, {
       chunkSize: 5,
-      parseChunk: parseChunkMock,
+      parseString: parseStringMock,
     })
     await expect(iterator.next()).rejects.toThrow()
     revoke()
+  })
+})
+
+describe('Papaparse high-level tests', () => {
+  PARSE_TESTS.forEach((test) => {
+    it(test.description, async () => {
+      const config: Parameters<typeof parseUrl>[1] = test.config || {}
+      const { url, fileSize, revoke } = toUrl(test.input)
+      const result = []
+      for await (const r of parseUrl(url, { ...config, lastByte: fileSize - 1 })) {
+        result.push(r)
+      }
+      revoke()
+      const data = result.map(({ row }) => row)
+      const errors = result.flatMap(({ errors: rowErrors }, row) => rowErrors.map((error) => {
+        if (error.code === 'UndetectableDelimiter') {
+          // no 'row' in this error (papaparse)
+          return error
+        }
+        return { ...error, row }
+      }))
+      expect(data).toEqual(test.expected.data)
+      expect(errors).toEqual(test.expected.errors)
+      // TODO(SL): meta test
+    })
   })
 })
