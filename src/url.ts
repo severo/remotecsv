@@ -35,6 +35,16 @@ export async function* parseUrl(
   let firstByte = checkIntegerGreaterOrEqualThan(options.firstByte, 0) ?? 0
   let lastByte = checkIntegerGreaterOrEqualThan(options.lastByte, -1)
 
+  const parseOptions = {
+    delimiter: options.delimiter,
+    newline: options.newline,
+    quoteChar: options.quoteChar,
+    escapeChar: options.escapeChar,
+    comments: options.comments,
+    delimitersToGuess: options.delimitersToGuess ? [...options.delimitersToGuess] : undefined,
+    skipEmptyLines: options.skipEmptyLines,
+  }
+
   let cursor = firstByte
   let bytes: Uint8Array<ArrayBufferLike> = new Uint8Array(0)
   while (true) {
@@ -71,20 +81,19 @@ export async function* parseUrl(
 
     let consumedBytes = 0
     for (const result of (options.parseChunk ?? parseChunk)(bytes, {
-      ignoreLastRow: true, // the remaining bytes may not contain a full last row
+      // the remaining bytes may not contain a full last row
+      ignoreLastRow: true,
       // pass other options
-      delimiter: options.delimiter,
-      newline: options.newline,
-      quoteChar: options.quoteChar,
-      escapeChar: options.escapeChar,
-      comments: options.comments,
-      delimitersToGuess: options.delimitersToGuess,
-      skipEmptyLines: options.skipEmptyLines,
+      ...parseOptions,
     })) {
       consumedBytes += result.meta.byteCount
       if (consumedBytes > bytes.length) {
         throw new Error('Invalid state: consumedBytes exceeds bytes length')
       }
+      // Update the options
+      parseOptions.delimiter = result.meta.delimiter
+      parseOptions.newline = result.meta.newline
+      // Yield the result with updated offset
       yield {
         ...result,
         meta: {
@@ -115,15 +124,10 @@ export async function* parseUrl(
   // Parse remaining bytes, if any
   if (bytes.length > 0) {
     for (const result of (options.parseChunk ?? parseChunk)(bytes, {
+      // parse until the last byte
       ignoreLastRow: false,
       // pass other options
-      delimiter: options.delimiter,
-      newline: options.newline,
-      quoteChar: options.quoteChar,
-      escapeChar: options.escapeChar,
-      comments: options.comments,
-      delimitersToGuess: options.delimitersToGuess,
-      skipEmptyLines: options.skipEmptyLines,
+      ...parseOptions,
     })) {
       yield {
         ...result,
