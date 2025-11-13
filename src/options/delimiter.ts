@@ -57,6 +57,8 @@ export function guessDelimiter(input: string, newline?: string, skipEmptyLines?:
       const fieldCount = row.length
       avgFieldCount += fieldCount
 
+      /* v8 ignore else -- @preserve */
+      // (else clause should not happen because row always has at least one field)
       if (fieldCountPrevRow === undefined) {
         fieldCountPrevRow = fieldCount
         continue
