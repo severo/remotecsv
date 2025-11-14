@@ -75,8 +75,6 @@ export function* parse(text: string, options: ParseOptions & {
             type: 'Quotes',
             code: 'MissingQuotes',
             message: 'Quoted field unterminated',
-            // row: data.length, // row has yet to be inserted
-            index: cursor,
           })
           const last = finish()
           if (last) {
@@ -158,8 +156,6 @@ export function* parse(text: string, options: ParseOptions & {
           type: 'Quotes',
           code: 'InvalidQuotes',
           message: 'Trailing quote on quoted field is malformed',
-          // row: data.length, // row has yet to be inserted
-          index: cursor,
         })
 
         quoteSearch++
@@ -224,7 +220,6 @@ export function* parse(text: string, options: ParseOptions & {
     value ??= text.substring(cursor)
     row.push(value)
     cursor = textLen
-    // lastCursor = cursor
     return getResult()
   }
 
@@ -245,9 +240,7 @@ export function* parse(text: string, options: ParseOptions & {
         newline,
         byteOffset,
         byteCount,
-        charOffset: lastCursor,
         charCount: string.length,
-        cursor, // it's the next charOffset
       },
     }
     lastCursor = cursor

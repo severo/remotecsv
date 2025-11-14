@@ -12,7 +12,20 @@ describe('Papaparse core parser tests', () => {
       const errors = result.flatMap(({ errors: rowErrors }, row) => rowErrors.map(error => ({ ...error, row })))
       expect(data).toEqual(test.expected.data)
       expect(errors).toEqual(test.expected.errors)
-      // TODO(SL): meta test
+      if (test.expected.meta?.charCount !== undefined) {
+        const charCount = result.reduce((acc, { meta }) => acc + (meta.charCount || 0), 0)
+        expect(charCount).toBe(test.expected.meta?.charCount)
+      }
+      if (test.expected.meta?.newline !== undefined) {
+        const newlines = new Set(result.map(({ meta }) => meta.newline))
+        expect(newlines.size).toBe(1)
+        expect(newlines.has(test.expected.meta?.newline)).toBe(true)
+      }
+      if (test.expected.meta?.delimiter !== undefined) {
+        const delimiters = new Set(result.map(({ meta }) => meta.delimiter))
+        expect(delimiters.size).toBe(1)
+        expect(delimiters.has(test.expected.meta?.delimiter)).toBe(true)
+      }
     })
   })
 })
@@ -98,11 +111,11 @@ describe('parse', () => {
 
     expect(meta[0]?.byteOffset).toBe(0)
     expect(meta[0]?.byteCount).toBe(9) // 'a,b,😊\n' (9 bytes)
-    expect(meta[0]?.cursor).toBe(7) // 'a,b,😊\n' (7 characters, 😊 counts for 1 character)
+    expect(meta[0]?.charCount).toBe(7) // 'a,b,😊\n' (7 characters, 😊 counts for 1 character)
 
     expect(meta[1]?.byteOffset).toBe(9)
     expect(meta[1]?.byteCount).toBe(8) // '1,2,😂' (8 bytes)
-    expect(meta[1]?.cursor).toBe(13) // '1,2,😂' (6 characters, 😂 counts for 2 characters!, + previous cursor: 7)
+    expect(meta[1]?.charCount).toBe(6) // '1,2,😂' (6 characters, 😂 counts for 2 characters!)
 
     expect((meta[1]?.byteOffset ?? NaN) + (meta[1]?.byteCount ?? NaN)).toBe(new TextEncoder().encode(text).length) // total bytes
   })

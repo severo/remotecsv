@@ -11,10 +11,6 @@ export interface ParseError {
     | 'InvalidQuotes'
   /** Human-readable details */
   message: string
-  /** Row index of parsed data where error is */
-  row?: number | undefined
-  /** Index within the row where error is */
-  index?: number | undefined
 }
 
 export interface ParseMeta {
@@ -22,38 +18,30 @@ export interface ParseMeta {
   delimiter: string
   /** Line break sequence used */
   newline: string
-  /** Character position after the parsed row */
-  cursor: number
-  /** Byte position where parsing started */
-  //   firstByte: number
-  /** Number of bytes parsed, including line breaks, BOM, spaces, etc. */
-  //   numBytes: number
-
   /** Byte offset at the start of the row */
   byteOffset: number
   /** Number of bytes consumed in this row */
   byteCount: number
-  /** Character offset at the start of the row */
-  charOffset: number
   /** Number of characters consumed in this row */
   charCount: number
 }
 
 /**
- * A parse result always contains three objects: data, errors, and meta.
- * Data and errors are arrays, and meta is an object. In the step callback, the data array will only contain one element.
+ * A parse result always contains three objects: row, errors, and meta.
+ * row and errors are arrays, and meta is an object.
  */
 export interface ParseResult {
   /**
    * the cells of the parsed row.
    */
   row: string[]
-  /** an array of errors. */
+  /**
+   * an array of errors.
+   */
   errors: ParseError[]
   /**
    * contains extra information about the parse, such as delimiter used,
-   * the newline sequence, whether the process was aborted, etc.
-   * Properties in this object are not guaranteed to exist in all situations.
+   * the newline sequence, etc.
    */
   meta: ParseMeta
 }

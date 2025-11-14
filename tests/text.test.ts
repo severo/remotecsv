@@ -16,12 +16,10 @@ describe('parseText', () => {
         row: ['hello', ' csvremote!!!'],
         errors: [],
         meta: {
-          cursor: text.length,
           delimiter: ',',
           newline: '\n' as const,
           byteOffset: 0,
           byteCount: bytes.length,
-          charOffset: 0,
           charCount: text.length,
         },
       })
@@ -73,7 +71,20 @@ describe('Papaparse high-level tests', () => {
       }))
       expect(data).toEqual(test.expected.data)
       expect(errors).toEqual(test.expected.errors)
-      // TODO(SL): meta test
+      if (test.expected.meta?.charCount !== undefined) {
+        const charCount = result.reduce((acc, { meta }) => acc + (meta.charCount || 0), 0)
+        expect(charCount).toBe(test.expected.meta?.charCount)
+      }
+      if (test.expected.meta?.newline !== undefined) {
+        const newlines = new Set(result.map(({ meta }) => meta.newline))
+        expect(newlines.size).toBe(1)
+        expect(newlines.has(test.expected.meta?.newline)).toBe(true)
+      }
+      if (test.expected.meta?.delimiter !== undefined) {
+        const delimiters = new Set(result.map(({ meta }) => meta.delimiter))
+        expect(delimiters.size).toBe(1)
+        expect(delimiters.has(test.expected.meta?.delimiter)).toBe(true)
+      }
     })
   })
 })
