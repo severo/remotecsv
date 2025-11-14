@@ -243,10 +243,11 @@ export function* parse(text: string, options: ParseOptions & {
       meta: {
         delimiter,
         newline,
-        // cursor: lastCursor,
-        cursor,
         byteOffset,
         byteCount,
+        charOffset: lastCursor,
+        charCount: string.length,
+        cursor, // it's the next charOffset
       },
     }
     lastCursor = cursor

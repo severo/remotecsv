@@ -29,10 +29,14 @@ export interface ParseMeta {
   /** Number of bytes parsed, including line breaks, BOM, spaces, etc. */
   //   numBytes: number
 
-  /** Byte offset */
+  /** Byte offset at the start of the row */
   byteOffset: number
   /** Number of bytes consumed in this row */
   byteCount: number
+  /** Character offset at the start of the row */
+  charOffset: number
+  /** Number of characters consumed in this row */
+  charCount: number
 }
 
 /**

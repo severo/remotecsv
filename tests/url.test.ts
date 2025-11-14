@@ -14,6 +14,8 @@ function* parseMock(text: string): Generator<ParseResult, void, unknown> {
     meta: {
       byteOffset: 0,
       byteCount: bytes.length,
+      charOffset: 0,
+      charCount: text.length,
       newline: '\n',
       // quote: '"',
       delimiter: ',',
@@ -107,8 +109,10 @@ describe('parseURL, while mocking parse, ', () => {
         row: [],
         errors: [],
         meta: {
-          byteCount: 2 * text.length,
           byteOffset: 0,
+          byteCount: 2 * text.length,
+          charOffset: 0,
+          charCount: 2 * text.length,
           newline: '\n',
           // quote: '"',
           delimiter: ',',

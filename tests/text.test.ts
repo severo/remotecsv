@@ -17,10 +17,12 @@ describe('parseText', () => {
         errors: [],
         meta: {
           cursor: text.length,
-          byteOffset: 0,
           delimiter: ',',
           newline: '\n' as const,
+          byteOffset: 0,
           byteCount: bytes.length,
+          charOffset: 0,
+          charCount: text.length,
         },
       })
     }
