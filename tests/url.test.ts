@@ -192,7 +192,7 @@ describe('parseURL', () => {
     revoke()
     expect(result.length).toBe(1)
     const data = result.map(({ row }) => row)
-    expect(data).toEqual([stripBOM ?? true ? ['hello', ' csvremote!!!'] : ['\ufeffhello', ' csvremote!!!']])
+    expect(data).toEqual([(stripBOM ?? true) ? ['hello', ' csvremote!!!'] : ['\ufeffhello', ' csvremote!!!']])
     // includes BOM bytes, independently of stripBOM
     expect(result[0]?.meta.byteCount).toBe(fileSize)
   })

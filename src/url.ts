@@ -48,7 +48,6 @@ export async function* parseURL(
   let lastByte = checkIntegerGreaterOrEqualThan(options.lastByte, -1)
 
   const { delimitersToGuess, stripBOM } = options
-  let isFirstChunk = true
   let parseOptions: ParseOptions | undefined = undefined
   let delimiterError: DelimiterError | undefined = undefined
 
@@ -111,9 +110,9 @@ export async function* parseURL(
       ...parseOptions,
       // the remaining bytes may not contain a full last row
       ignoreLastRow: true,
-      stripBOM: isFirstChunk ? stripBOM : false, // TODO(SL): only if firstByte + invalidByteCount === 0 ?
+      // don't strip BOM if not the start of the file
+      stripBOM: chunkByteOffset > 0 ? false : stripBOM,
     })) {
-      isFirstChunk = false
       consumedBytes += result.meta.byteCount
       if (consumedBytes > bytes.length) {
         throw new Error('Invalid state: consumedBytes exceeds bytes length')
@@ -173,7 +172,8 @@ export async function* parseURL(
     ...parseOptions,
     // parse until the last byte
     ignoreLastRow: false,
-    stripBOM: isFirstChunk ? stripBOM : false,
+    // don't strip BOM if not the start of the file
+    stripBOM: chunkByteOffset > 0 ? false : stripBOM,
   })) {
     // Add delimiter error to the first result only
     if (delimiterError) {
