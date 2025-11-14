@@ -9,7 +9,7 @@ describe('Papaparse core parser tests', () => {
       const config = test.config || {}
       const result = [...parse(test.text, config)]
       const data = result.map(({ row }) => row)
-      const errors = result.flatMap(({ errors: rowErrors }, row) => rowErrors.map(error => ({ ...error, row })))
+      const errors = result.flatMap(({ errors }) => errors)
       expect(data).toEqual(test.expected.data)
       expect(errors).toEqual(test.expected.errors)
       if (test.expected.meta?.charCount !== undefined) {

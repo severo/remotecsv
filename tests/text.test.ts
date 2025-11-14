@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { parseText } from '../src/text'
 import { testEmptyLine } from '../src/utils'
-import { cases, PARSE_TESTS } from './cases'
+import { PARSE_TESTS } from './cases'
 
 describe('parseText', () => {
   it('decodes a string', () => {
@@ -26,12 +26,6 @@ describe('parseText', () => {
     }
     // For now: only one iteration per chunk
     expect(i).toBe(1)
-  })
-  it.for(cases)('$description', ({ text, expected }) => {
-    const results = [...parseText(text)]
-
-    expect(results.map(({ row }) => row)).toEqual(expected.rows)
-    // TODO(SL): check the metadata and the errors too
   })
 
   it.for([

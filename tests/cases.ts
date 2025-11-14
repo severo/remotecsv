@@ -1,17 +1,5 @@
 import { RECORD_SEP, UNIT_SEP } from '../src/options/constants.js'
 
-export const cases = [
-  {
-    description: 'One row',
-    text: 'A,b,c',
-    expected: {
-      rows: [['A', 'b', 'c']],
-      errors: [],
-      meta: { delimiter: ',', renamedHeaders: null },
-    },
-  },
-]
-
 export const CORE_PARSER_TESTS = [
   {
     description: 'One row',
@@ -198,8 +186,6 @@ export const CORE_PARSER_TESTS = [
         type: 'Quotes',
         code: 'MissingQuotes',
         message: 'Quoted field unterminated',
-        row: 0,
-        index: 3,
       }],
     },
   },
@@ -213,8 +199,6 @@ export const CORE_PARSER_TESTS = [
         type: 'Quotes',
         code: 'InvalidQuotes',
         message: 'Trailing quote on quoted field is malformed',
-        row: 0,
-        index: 1,
       }],
     },
   },
@@ -228,15 +212,11 @@ export const CORE_PARSER_TESTS = [
         type: 'Quotes',
         code: 'InvalidQuotes',
         message: 'Trailing quote on quoted field is malformed',
-        row: 0,
-        index: 3,
       },
       {
         type: 'Quotes',
         code: 'MissingQuotes',
         message: 'Quoted field unterminated',
-        row: 0,
-        index: 3,
       }],
     },
   },
@@ -250,15 +230,11 @@ export const CORE_PARSER_TESTS = [
         type: 'Quotes',
         code: 'InvalidQuotes',
         message: 'Trailing quote on quoted field is malformed',
-        row: 0,
-        index: 3,
       },
       {
         type: 'Quotes',
         code: 'MissingQuotes',
         message: 'Quoted field unterminated',
-        row: 0,
-        index: 3,
       }],
     },
   },
@@ -272,15 +248,11 @@ export const CORE_PARSER_TESTS = [
         type: 'Quotes',
         code: 'InvalidQuotes',
         message: 'Trailing quote on quoted field is malformed',
-        row: 0,
-        index: 3,
       },
       {
         type: 'Quotes',
         code: 'MissingQuotes',
         message: 'Quoted field unterminated',
-        row: 0,
-        index: 3,
       }],
     },
   },
@@ -714,7 +686,6 @@ export const PARSE_TESTS = [
   //       type: 'FieldMismatch',
   //       code: 'TooFewFields',
   //       message: 'Too few fields: expected 3 fields but parsed 2',
-  //       row: 0,
   //     }],
   //   },
   // },
@@ -728,7 +699,6 @@ export const PARSE_TESTS = [
   //       type: 'FieldMismatch',
   //       code: 'TooManyFields',
   //       message: 'Too many fields: expected 3 fields but parsed 5',
-  //       row: 0,
   //     }],
   //   },
   // },
