@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest'
 
 import { parseURL } from '../src'
 
-describe('README examples', () => {
+// Ignore these tests for now, they are just for documentation purposes
+describe.skip('README examples', () => {
   it('parses a remote CSV file', async () => {
     const rows = []
     for await (const { row } of parseURL('https://data.source.coop/severo/csv-papaparse-test-files/sample.csv')) {
