@@ -43,7 +43,6 @@ export async function* parseURL(
   options: parseURLOptions = {},
 ): AsyncGenerator<ParseResult, void, unknown> {
   const chunkSize = checkIntegerGreaterOrEqualThan(options.chunkSize, 1) ?? defaultChunkSize
-  // TODO(SL): should we accept negative values (from the end)?
   let firstByte = checkIntegerGreaterOrEqualThan(options.firstByte, 0) ?? 0
   let lastByte = checkIntegerGreaterOrEqualThan(options.lastByte, -1)
 

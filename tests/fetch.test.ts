@@ -43,7 +43,6 @@ describe('fetchRange', () => {
   // returns 416 Requested Range Not Satisfiable (or some servers like Apache return 200 OK).
   // see https://github.com/golang/go/issues/47021#issuecomment-874513977 and
   // https://github.com/pallets/werkzeug/issues/1937 for examples.
-  // TODO(SL): support empty files?
   it.for([200, 416, 500])('throws an error for non-206 response: %s', async (status) => {
     const mockResponse = {
       status,

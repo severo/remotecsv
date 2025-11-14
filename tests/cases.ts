@@ -528,52 +528,6 @@ export const CORE_PARSER_TESTS = [
       errors: [],
     },
   },
-  {
-    description: 'Simple duplicated header names',
-    text: 'A,A,A,A\n1,2,3,4',
-    config: { header: true },
-    expected: {
-      // TODO(SL): implement header name deduplication?
-      data: [['A', 'A', 'A', 'A'], ['1', '2', '3', '4']],
-      // data: [['A', 'A_1', 'A_2', 'A_3'], ['1', '2', '3', '4']],
-      errors: [],
-      meta: {
-        // renamedHeaders: { A_1: 'A', A_2: 'A', A_3: 'A' },
-        charCount: 15,
-      },
-    },
-  },
-  {
-    description: 'Duplicated header names existing column',
-    text: 'c,c,c,c_1\n1,2,3,4',
-    config: { header: true },
-    expected: {
-      // TODO(SL): implement header name deduplication?
-      // data: [['c', 'c_2', 'c_3', 'c_1'], ['1', '2', '3', '4']],
-      data: [['c', 'c', 'c', 'c_1'], ['1', '2', '3', '4']],
-      errors: [],
-      meta: {
-        // renamedHeaders: { c_2: 'c', c_3: 'c' },
-        charCount: 17,
-      },
-    },
-  },
-  {
-    description: 'Duplicate header names with __proto__ field',
-    text: '__proto__,__proto__,__proto__\n1,2,3',
-    config: { header: true },
-    expected: {
-      // TODO(SL): implement header name deduplication?
-      // data: [['__proto__', '__proto___1', '__proto___2'], ['1', '2', '3']],
-      data: [['__proto__', '__proto__', '__proto__'], ['1', '2', '3']],
-      errors: [],
-      meta: {
-        // renamedHeaders: { __proto___1: '__proto__', __proto___2: '__proto__' },
-        charCount: 35,
-      },
-    },
-  },
-
 ]
 
 export const PARSE_TESTS = [
@@ -657,51 +611,6 @@ export const PARSE_TESTS = [
       errors: [],
     },
   },
-  // TODO(SL): implement header: true?
-  // {
-  //   description: 'Header row with one row of data',
-  //   text: 'A,B,C\r\na,b,c',
-  //   config: { header: true },
-  //   expected: {
-  //     data: [{ A: 'a', B: 'b', C: 'c' }],
-  //     errors: [],
-  //   },
-  // },
-  // {
-  //   description: 'Header row only',
-  //   text: 'A,B,C',
-  //   config: { header: true },
-  //   expected: {
-  //     data: [],
-  //     errors: [],
-  //   },
-  // },
-  // {
-  //   description: 'Row with too few fields',
-  //   text: 'A,B,C\r\na,b',
-  //   config: { header: true },
-  //   expected: {
-  //     data: [{ A: 'a', B: 'b' }],
-  //     errors: [{
-  //       type: 'FieldMismatch',
-  //       code: 'TooFewFields',
-  //       message: 'Too few fields: expected 3 fields but parsed 2',
-  //     }],
-  //   },
-  // },
-  // {
-  //   description: 'Row with too many fields',
-  //   text: 'A,B,C\r\na,b,c,d,e\r\nf,g,h',
-  //   config: { header: true },
-  //   expected: {
-  //     data: [{ A: 'a', B: 'b', C: 'c', __parsed_extra: ['d', 'e'] }, { A: 'f', B: 'g', C: 'h' }],
-  //     errors: [{
-  //       type: 'FieldMismatch',
-  //       code: 'TooManyFields',
-  //       message: 'Too many fields: expected 3 fields but parsed 5',
-  //     }],
-  //   },
-  // },
   {
     description: 'Row with enough fields but blank field in the begining',
     text: 'A,B,C\r\n,b1,c1\r\na2,b2,c2',
@@ -710,41 +619,6 @@ export const PARSE_TESTS = [
       errors: [],
     },
   },
-  // TODO(SL): implement header: true?
-  // {
-  //   description: 'Row with enough fields but blank field in the begining using headers',
-  //   text: 'A,B,C\r\n,b1,c1\r\n,b2,c2',
-  //   config: { header: true },
-  //   expected: {
-  //     data: [{ A: '', B: 'b1', C: 'c1' }, { A: '', B: 'b2', C: 'c2' }],
-  //     errors: [],
-  //   },
-  // },
-  // {
-  //   description: 'Row with enough fields but blank field at end',
-  //   text: 'A,B,C\r\na,b,',
-  //   config: { header: true },
-  //   expected: {
-  //     data: [{ A: 'a', B: 'b', C: '' }],
-  //     errors: [],
-  //   },
-  // },
-  // {
-  //   description: 'Line ends with quoted field, first field of next line is empty using headers',
-  //   text: 'a,b,"c"\r\nd,e,"f"\r\n,"h","i"\r\n,"k","l"',
-  //   config: {
-  //     header: true,
-  //     newline: '\r\n',
-  //   },
-  //   expected: {
-  //     data: [
-  //       { a: 'd', b: 'e', c: 'f' },
-  //       { a: '', b: 'h', c: 'i' },
-  //       { a: '', b: 'k', c: 'l' },
-  //     ],
-  //     errors: [],
-  //   },
-  // },
   {
     description: 'Tab delimiter',
     text: 'a\tb\tc\r\nd\te\tf',
@@ -1018,17 +892,6 @@ export const PARSE_TESTS = [
       errors: [],
     },
   },
-  // TODO(SL): implement header: true?
-  // {
-  //   description: 'Header row with preceding comment',
-  //   notes: 'Must parse correctly headers if they are preceded by comments',
-  //   text: '#Comment\na,b\nc,d\n',
-  //   config: { header: true, comments: '#', skipEmptyLines: true, delimiter: ',' },
-  //   expected: {
-  //     data: [{ a: 'c', b: 'd' }],
-  //     errors: [],
-  //   },
-  // },
   {
     description: 'Carriage return in header inside quotes, with line feed endings',
     text: '"a\r\na","b"\n"c","d"\n"e","f"\n"g","h"\n"i","j"',
@@ -1168,16 +1031,6 @@ export const PARSE_TESTS = [
       errors: [],
     },
   },
-  // TODO(SL): implement header: true?
-  // {
-  //   description: 'UTF-8 BOM encoded text with header produces column key stripped from invisible BOM character',
-  //   text: '\ufeffA,B\nX,Y',
-  //   config: { header: true },
-  //   expected: {
-  //     data: [{ A: 'X', B: 'Y' }],
-  //     errors: [],
-  //   },
-  // },
   {
     description: 'Quoted fields with spaces between closing quote and next delimiter and contains delimiter',
     text: 'A,",B" ,C,D\nE,F,G,H',

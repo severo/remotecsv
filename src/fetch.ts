@@ -1,7 +1,3 @@
-// TODO(SL): return a stream reader?
-// TODO(SL): let pass a custom fetch function?
-// TODO(SL): use If-Range header?
-
 /**
  * Fetches a chunk of a remote file.
  *
@@ -81,7 +77,6 @@ export async function fetchRange({
       Range: `bytes=${firstByte}-${lastByte}`,
     },
   }
-  // TODO(SL): let pass a custom fetch function?
   const response = await fetch(url, mergedRequestInit)
   if (response.status === 416) {
     // Requested Range Not Satisfiable
