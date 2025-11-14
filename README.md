@@ -1,6 +1,6 @@
-# removecsv
+# csv-range
 
-Fetch and parse a remote CSV file.
+Fetch and parse ranges of CSV file.
 
 ## Install
 
