@@ -40,3 +40,44 @@ export function escapeRegExp(string: string) {
 export function testEmptyLine(s: string[], skipEmptyLines?: 'greedy' | boolean) {
   return skipEmptyLines === 'greedy' ? s.join('').trim() === '' : 0 in s && s.length === 1 && s[0].length === 0
 }
+
+/**
+ * Decodes the given bytes using the provided decoder.
+ * @param bytes The bytes to decode.
+ * @param options The options for decoding.
+ * @param options.stripInvalidBytesAtStart Whether to strip invalid bytes at the start of the byte array.
+ * @returns The decoded text and the number of invalid bytes skipped at the start
+ */
+export function decode(bytes: Uint8Array<ArrayBufferLike>, { stripInvalidBytesAtStart }: { stripInvalidBytesAtStart?: boolean } = {}): {
+  text: string
+  invalidByteCount: number
+} {
+  const decoder = new TextDecoder('utf-8', {
+    // don't strip the BOM, we handle it in the parse function
+    ignoreBOM: true,
+    // throw on decoding errors, see https://github.com/severo/csv-range/issues/16
+    fatal: true,
+  })
+
+  if (!stripInvalidBytesAtStart) {
+    // Let the decoder throw on errors, since they should not occur anymore
+    return { text: decoder.decode(bytes), invalidByteCount: 0 }
+  }
+
+  for (let i = 0; i < bytes.length; i++) {
+    try {
+      const text = decoder.decode(bytes.subarray(i))
+      // found the first valid byte
+      return { text, invalidByteCount: i }
+    }
+    catch {
+      // still invalid, try the next byte
+      continue
+    }
+  }
+  // the byte array is empty, or all bytes are invalid
+  return {
+    text: '',
+    invalidByteCount: bytes.length,
+  }
+}

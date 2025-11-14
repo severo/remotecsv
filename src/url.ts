@@ -4,6 +4,7 @@ import { defaultChunkSize } from './options/constants'
 import { type DelimiterError, type ParseOptions, validateAndGuessParseOptions } from './options/parseOptions'
 import { parse } from './parser'
 import type { ParseResult } from './types'
+import { decode } from './utils'
 
 interface FetchOptions {
   chunkSize?: number
@@ -51,10 +52,19 @@ export async function* parseURL(
   let parseOptions: ParseOptions | undefined = undefined
   let delimiterError: DelimiterError | undefined = undefined
 
-  const decoder = new TextDecoder('utf-8', {
-    // don't strip the BOM, we handle it in the parse function
-    ignoreBOM: true,
-  })
+  /*
+   * Number of bytes skipped due to decoding errors
+   * They are only accepted at the start of the range, otherwise an exception is thrown.
+   * Note that, in the extreme case where chunkSize = 1, and multiple bytes are invalid at the start,
+   * multiple chunk iterations may be needed until a valid byte is found.
+   * If there are decoding errors, the first valid character will be considered the start of the text,
+   * and the byte offsets will be adjusted accordingly. An error will be reported in the first parsed row.
+   * It also means that the first row's byteOffset may be greater than options.firstByte.
+   */
+  const invalidData = {
+    byteCount: 0,
+    status: 'pending' as 'pending' | 'done',
+  }
   let chunkByteOffset = firstByte
   let bytes: Uint8Array<ArrayBufferLike> = new Uint8Array(0)
   while (true) {
@@ -84,8 +94,11 @@ export async function* parseURL(
       bytes = combinedBytes
     }
 
-    let consumedBytes = 0
-    const text = decoder.decode(bytes)
+    const { text, invalidByteCount } = decode(bytes, { stripInvalidBytesAtStart: invalidData.status === 'pending' })
+    // Skip the invalid bytes at the start (should only happen if pending, else invalidByteCount should be 0)
+    invalidData.byteCount += invalidByteCount
+    bytes = bytes.slice(invalidByteCount)
+    chunkByteOffset += invalidByteCount
 
     if (!parseOptions) {
       const result = validateAndGuessParseOptions(options, { text, delimitersToGuess })
@@ -93,11 +106,12 @@ export async function* parseURL(
       delimiterError = result.error
     }
 
+    let consumedBytes = 0
     for (const result of (options.parse ?? parse)(text, {
       ...parseOptions,
       // the remaining bytes may not contain a full last row
       ignoreLastRow: true,
-      stripBOM: isFirstChunk ? stripBOM : false,
+      stripBOM: isFirstChunk ? stripBOM : false, // TODO(SL): only if firstByte + invalidByteCount === 0 ?
     })) {
       isFirstChunk = false
       consumedBytes += result.meta.byteCount
@@ -108,6 +122,17 @@ export async function* parseURL(
       if (delimiterError) {
         result.errors.push(delimiterError)
         delimiterError = undefined
+      }
+      // Add invalid byte count to the first reported row only
+      if (invalidData.status === 'pending') {
+        invalidData.status = 'done'
+        if (invalidData.byteCount > 0) {
+          result.errors.push({
+            type: 'Decoding',
+            code: 'InvalidData',
+            message: `Skipped ${invalidData.byteCount} invalid byte(s) at the start of the range`,
+          })
+        }
       }
       // Yield the result with updated byte offset
       yield {
@@ -138,7 +163,12 @@ export async function* parseURL(
   }
 
   // Parse the last row (even if the remaining bytes are empty)
-  const text = decoder.decode(bytes)
+  const { text, invalidByteCount } = decode(bytes, { stripInvalidBytesAtStart: invalidData.status === 'pending' })
+  // Skip the invalid bytes at the start (should only happen if pending, else invalidByteCount should be 0)
+  invalidData.byteCount += invalidByteCount
+  bytes = bytes.slice(invalidByteCount)
+  chunkByteOffset += invalidByteCount
+
   for (const result of (options.parse ?? parse)(text, {
     ...parseOptions,
     // parse until the last byte
@@ -149,6 +179,17 @@ export async function* parseURL(
     if (delimiterError) {
       result.errors.push(delimiterError)
       delimiterError = undefined
+    }
+    // Add invalid byte count to the first reported row only
+    if (invalidData.status === 'pending') {
+      invalidData.status = 'done'
+      if (invalidData.byteCount > 0) {
+        result.errors.push({
+          type: 'Decoding',
+          code: 'InvalidData',
+          message: `Skipped ${invalidData.byteCount} invalid byte(s) at the start of the range`,
+        })
+      }
     }
     yield {
       ...result,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { escapeRegExp, testEmptyLine, toUrl } from '../src/utils'
+import { decode, escapeRegExp, testEmptyLine, toUrl } from '../src/utils'
 
 describe('toUrl', () => {
   it('creates a valid blob URL and revokes it', async () => {
@@ -73,5 +73,57 @@ describe('testEmptyLine', () => {
     expect(testEmptyLine(['   '], 'greedy')).toBe(true)
     expect(testEmptyLine([' \t', ' '], 'greedy')).toBe(true)
     expect(testEmptyLine(['data'], 'greedy')).toBe(false)
+  })
+})
+
+describe('decode', () => {
+  it.for([
+    '\ufeffhello, csvremote!!!',
+    'hello, \ufeffcsvremote!!!',
+    'hello, csvremote!!!\ufeff',
+  ])('should not strip the BOM', (text) => {
+    expect(decode(new TextEncoder().encode(text))).toEqual({
+      text,
+      invalidByteCount: 0,
+    })
+  })
+
+  it('should strip invalid bytes at the start if specified', () => {
+    // Invalid UTF-8 bytes: 0xFF, 0xFE
+    const invalidBytes = new Uint8Array([0xFF, 0xFE, 0x68, 0x65, 0x6C, 0x6C, 0x6F]) // "hello"
+    expect(decode(invalidBytes, { stripInvalidBytesAtStart: true })).toEqual({
+      text: 'hello',
+      invalidByteCount: 2,
+    })
+  })
+
+  it('should throw on invalid bytes if not stripping', () => {
+    // Invalid UTF-8 bytes: 0xFF, 0xFE
+    const invalidBytes = new Uint8Array([0xFF, 0xFE, 0x68, 0x65, 0x6C, 0x6C, 0x6F]) // "hello"
+    expect(() => decode(invalidBytes)).toThrow()
+  })
+
+  it('should return all bytes as invalid if all are invalid', () => {
+    const invalidBytes = new Uint8Array([0xFF, 0xFE, 0xFF, 0xFE])
+    expect(decode(invalidBytes, { stripInvalidBytesAtStart: true })).toEqual({
+      text: '',
+      invalidByteCount: 4,
+    })
+  })
+
+  it('should handle valid UTF-8 bytes correctly', () => {
+    const validBytes = new TextEncoder().encode('Valid UTF-8 text')
+    expect(decode(validBytes, { stripInvalidBytesAtStart: true })).toEqual({
+      text: 'Valid UTF-8 text',
+      invalidByteCount: 0,
+    })
+  })
+
+  it('should handle empty byte array', () => {
+    const emptyBytes = new Uint8Array([])
+    expect(decode(emptyBytes, { stripInvalidBytesAtStart: true })).toEqual({
+      text: '',
+      invalidByteCount: 0,
+    })
   })
 })

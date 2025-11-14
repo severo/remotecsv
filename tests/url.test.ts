@@ -196,4 +196,117 @@ describe('parseURL', () => {
     // includes BOM bytes, independently of stripBOM
     expect(result[0]?.meta.byteCount).toBe(fileSize)
   })
+
+  it.for([
+    { firstByte: 0, expected: { row: ['👉🏿', '1'], charCount: 6 } },
+    // There is no way to know that '👉' and '🏿' were part of a combined emoji.
+    { firstByte: 0, lastByte: 3, expected: { row: ['👉'], charCount: 2 } },
+    { firstByte: 1, expected: { row: ['🏿', '1'], charCount: 4, invalidByteCount: 3 } },
+    { firstByte: 2, expected: { row: ['🏿', '1'], charCount: 4, invalidByteCount: 2 } },
+    { firstByte: 3, expected: { row: ['🏿', '1'], charCount: 4, invalidByteCount: 1 } },
+    { firstByte: 4, expected: { row: ['🏿', '1'], charCount: 4 } },
+    { firstByte: 4, lastByte: 7, expected: { row: ['🏿'], charCount: 2 } },
+    { firstByte: 5, expected: { row: ['', '1'], charCount: 2, invalidByteCount: 3 } },
+    { firstByte: 6, expected: { row: ['', '1'], charCount: 2, invalidByteCount: 2 } },
+    { firstByte: 7, expected: { row: ['', '1'], charCount: 2, invalidByteCount: 1 } },
+    { firstByte: 8, expected: { row: ['', '1'], charCount: 2 } },
+  ])('should support cutting 👉🏿 emoji: firstByte=$firstByte, lastByte=$lastByte', async ({ firstByte, lastByte, expected: { row, charCount, invalidByteCount } }) => {
+    // 👉🏿 uses 8 bytes in UTF-8.
+    const text = '👉🏿,1'
+    const { url, fileSize, revoke } = toUrl(text)
+    lastByte ??= fileSize - 1
+    const result = []
+    for await (const r of parseURL(url, { firstByte, lastByte, delimiter: ',', newline: '\n' })) {
+      result.push(r)
+    }
+    revoke()
+
+    const expectedByteOffset = firstByte + (invalidByteCount ?? 0)
+    expect(result.length).toBe(1)
+    expect(result).toEqual([{
+      errors: invalidByteCount === undefined
+        ? []
+        : [{
+            type: 'Decoding',
+            code: 'InvalidData',
+            message: `Skipped ${invalidByteCount} invalid byte(s) at the start of the range`,
+          }],
+      row,
+      meta: {
+        byteOffset: expectedByteOffset,
+        byteCount: lastByte - expectedByteOffset + 1,
+        charCount, // TODO(SL): define what is a "character" (UTF-16 code point? grapheme?)
+        delimiter: ',',
+        newline: '\n',
+      },
+    }])
+    expect((result[0]?.meta.byteCount ?? -Infinity) + (result[0]?.meta.byteOffset ?? -Infinity)).toBe(lastByte + 1)
+  })
+
+  it('should search invalid bytes over multiple chunks if needed', async () => {
+    const text = '👉,1'
+    const { url, fileSize, revoke } = toUrl(text)
+    const result = []
+    // There are 3 invalid bytes at start, when starting at byte 1. Using chunkSize=1 to force multiple iterations.
+    for await (const r of parseURL(url, { chunkSize: 1, firstByte: 1, lastByte: fileSize - 1, delimiter: ',', newline: '\n' })) {
+      result.push(r)
+    }
+    revoke()
+
+    expect(result.length).toBe(1)
+    expect(result).toEqual([{
+      errors: [{
+        type: 'Decoding',
+        code: 'InvalidData',
+        message: 'Skipped 3 invalid byte(s) at the start of the range',
+      }],
+      row: ['', '1'],
+      meta: {
+        byteOffset: 4,
+        byteCount: fileSize - 4,
+        charCount: 2,
+        delimiter: ',',
+        newline: '\n',
+      },
+    }])
+  })
+
+  it('should report invalid data in multiple rows', async () => {
+    const text = '👉a,b\n1,2'
+    const { url, fileSize, revoke } = toUrl(text)
+    const result = []
+    for await (const r of parseURL(url, { firstByte: 3, lastByte: fileSize - 1, delimiter: ',', newline: '\n' })) {
+      result.push(r)
+    }
+    revoke()
+    expect(result.length).toBe(2)
+    expect(result).toEqual([
+      {
+        errors: [{
+          type: 'Decoding',
+          code: 'InvalidData',
+          message: 'Skipped 1 invalid byte(s) at the start of the range',
+        }],
+        row: ['a', 'b'],
+        meta: {
+          byteOffset: 4,
+          byteCount: 4,
+          charCount: 4,
+          delimiter: ',',
+          newline: '\n',
+        },
+      },
+      {
+        errors: [],
+        row: ['1', '2'],
+        meta: {
+          byteOffset: 8,
+          byteCount: 3,
+          charCount: 3,
+          delimiter: ',',
+          newline: '\n',
+        },
+      },
+    ])
+  })
 })

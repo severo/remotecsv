@@ -1,7 +1,7 @@
 /** Error structure */
 export interface ParseError {
   /** A generalization of the error */
-  type: 'Quotes' | 'Delimiter' | 'FieldMismatch'
+  type: 'Quotes' | 'Delimiter' | 'FieldMismatch' | 'Decoding'
   /** Standardized error code */
   code:
     | 'MissingQuotes'
@@ -9,6 +9,7 @@ export interface ParseError {
     | 'TooFewFields'
     | 'TooManyFields'
     | 'InvalidQuotes'
+    | 'InvalidData'
   /** Human-readable details */
   message: string
 }
