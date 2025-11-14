@@ -1,6 +1,6 @@
 {
   "name": "csv-range",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Parse ranges of a CSV file.",
   "type": "module",
   "license": "MIT",
@@ -28,6 +28,7 @@
     "coverage": "vitest run --coverage --project=node",
     "dev": "tsdown --tsconfig=tsconfig.build.json --watch",
     "lint": "eslint .",
+    "prepublishOnly": "npm i && npm run build",
     "test:browser": "vitest run --project=browser",
     "test:node": "vitest run --project=node",
     "test:ui": "vitest --coverage --project=node --ui",
