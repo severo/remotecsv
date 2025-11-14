@@ -1,16 +1,16 @@
 {
-  "name": "remotecsv",
+  "name": "csv-range",
   "version": "0.0.0",
-  "description": "Fetch and parse a remote CSV file.",
+  "description": "Parse ranges of a CSV file.",
   "type": "module",
   "license": "MIT",
-  "homepage": "https://github.com/severo/remotecsv#readme",
+  "homepage": "https://github.com/severo/csv-range#readme",
   "bugs": {
-    "url": "https://github.com/severo/remotecsv/issues"
+    "url": "https://github.com/severo/csv-range/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/severo/remotecsv.git"
+    "url": "git+https://github.com/severo/csv-range.git"
   },
   "author": "Sylvain Lesage <severo@rednegra.net>",
   "files": [

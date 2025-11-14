@@ -5,7 +5,7 @@ Fetch and parse a remote CSV file.
 ## Install
 
 ```bash
-npm install remotecsv
+npm install csv-range
 ```
 
 ## Usage
@@ -13,7 +13,7 @@ npm install remotecsv
 To parse a remote CSV file from a URL:
 
 ```typescript
-import { parseURL } from 'remotecsv'
+import { parseURL } from 'csv-range'
 const rows = []
 for await (const { row } of parseURL('https://data.source.coop/severo/csv-papaparse-test-files/sample.csv')) {
     rows.push(row)
