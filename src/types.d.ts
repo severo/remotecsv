@@ -30,7 +30,7 @@ export interface ParseMeta {
   //   numBytes: number
 
   /** Byte offset */
-  offset: number
+  byteOffset: number
   /** Number of bytes consumed in this row */
   byteCount: number
 }

@@ -17,7 +17,7 @@ describe('parseText', () => {
         errors: [],
         meta: {
           cursor: text.length,
-          offset: 0,
+          byteOffset: 0,
           delimiter: ',',
           newline: '\n' as const,
           byteCount: bytes.length,

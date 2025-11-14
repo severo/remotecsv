@@ -85,4 +85,25 @@ describe('parse', () => {
     expect(data).toEqual([])
     expect(errors).toEqual([])
   })
+
+  it('should handle characters with length > 1 correctly', () => {
+    const text = 'a,b,😊\n1,2,😂'
+    const result = [...parse(text)]
+    const data = result.map(({ row }) => row)
+    const meta = result.map(({ meta }) => meta)
+    expect(data).toEqual([
+      ['a', 'b', '😊'],
+      ['1', '2', '😂'],
+    ])
+
+    expect(meta[0]?.byteOffset).toBe(0)
+    expect(meta[0]?.byteCount).toBe(9) // 'a,b,😊\n' (9 bytes)
+    expect(meta[0]?.cursor).toBe(7) // 'a,b,😊\n' (7 characters, 😊 counts for 1 character)
+
+    expect(meta[1]?.byteOffset).toBe(9)
+    expect(meta[1]?.byteCount).toBe(8) // '1,2,😂' (8 bytes)
+    expect(meta[1]?.cursor).toBe(13) // '1,2,😂' (6 characters, 😂 counts for 2 characters!, + previous cursor: 7)
+
+    expect((meta[1]?.byteOffset ?? NaN) + (meta[1]?.byteCount ?? NaN)).toBe(new TextEncoder().encode(text).length) // total bytes
+  })
 })

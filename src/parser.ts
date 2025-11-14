@@ -43,7 +43,7 @@ export function* parse(text: string, options: ParseOptions & {
   let row: string[] = []
   let cursor = 0
   let lastCursor = 0
-  let offset = 0 // Byte offset
+  let byteOffset = 0
 
   if (stripBOM && text.charCodeAt(0) === 0xfeff) {
     cursor = 1
@@ -245,12 +245,12 @@ export function* parse(text: string, options: ParseOptions & {
         newline,
         // cursor: lastCursor,
         cursor,
-        offset,
+        byteOffset,
         byteCount,
       },
     }
     lastCursor = cursor
-    offset += byteCount
+    byteOffset += byteCount
 
     return result
   }

@@ -56,7 +56,7 @@ export async function* parseURL(
     // don't strip the BOM, we handle it in the parse function
     ignoreBOM: true,
   })
-  let cursor = firstByte
+  let chunkByteOffset = firstByte
   let bytes: Uint8Array<ArrayBufferLike> = new Uint8Array(0)
   while (true) {
     const { bytes: chunkBytes, fileSize } = await (options.fetchChunk ?? fetchChunk)({
@@ -110,12 +110,12 @@ export async function* parseURL(
         result.errors.push(delimiterError)
         delimiterError = undefined
       }
-      // Yield the result with updated offset
+      // Yield the result with updated byte offset
       yield {
         ...result,
         meta: {
           ...result.meta,
-          offset: result.meta.offset + cursor,
+          byteOffset: result.meta.byteOffset + chunkByteOffset,
         },
       }
     }
@@ -123,12 +123,12 @@ export async function* parseURL(
     // Use the remaining bytes for the next iteration, if any.
     // We use .slice, and not .subarray, so that the bytes buffer can be garbage collected.
     bytes = bytes.slice(consumedBytes)
-    cursor += consumedBytes
+    chunkByteOffset += consumedBytes
     firstByte += chunkSize
 
     if (firstByte <= lastByte) {
       /* v8 ignore if -- @preserve */
-      if (cursor + bytes.length !== firstByte) {
+      if (chunkByteOffset + bytes.length !== firstByte) {
       // assertion: it should not happen.
         throw new Error('Invalid state: non-contiguous offsets')
       }
@@ -155,7 +155,7 @@ export async function* parseURL(
       ...result,
       meta: {
         ...result.meta,
-        offset: result.meta.offset + cursor,
+        byteOffset: result.meta.byteOffset + chunkByteOffset,
       },
     }
   }

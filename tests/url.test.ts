@@ -12,8 +12,8 @@ function* parseMock(text: string): Generator<ParseResult, void, unknown> {
     row: [text],
     errors: [],
     meta: {
+      byteOffset: 0,
       byteCount: bytes.length,
-      offset: 0,
       newline: '\n',
       // quote: '"',
       delimiter: ',',
@@ -29,9 +29,9 @@ describe('parseURL, while mocking parse, ', () => {
     let result = ''
     let bytes = 0
     // passing 'to: fileSize - 1' for Node.js bug: https://github.com/nodejs/node/issues/60382
-    for await (const { row, meta: { offset, byteCount } } of parseURL(url, { chunkSize, lastByte: fileSize - 1, parse: parseMock })) {
+    for await (const { row, meta: { byteOffset, byteCount } } of parseURL(url, { chunkSize, lastByte: fileSize - 1, parse: parseMock })) {
       result += row
-      expect(offset).toBe(bytes)
+      expect(byteOffset).toBe(bytes)
       bytes += byteCount
     }
     revoke()
@@ -108,7 +108,7 @@ describe('parseURL, while mocking parse, ', () => {
         errors: [],
         meta: {
           byteCount: 2 * text.length,
-          offset: 0,
+          byteOffset: 0,
           newline: '\n',
           // quote: '"',
           delimiter: ',',
@@ -160,9 +160,9 @@ describe('parseURL', () => {
     const { url, fileSize, revoke } = toUrl(text)
     const result = []
     let bytes = 0
-    for await (const { row, meta: { offset, byteCount } } of parseURL(url, { chunkSize, lastByte: fileSize - 1 })) {
+    for await (const { row, meta: { byteOffset, byteCount } } of parseURL(url, { chunkSize, lastByte: fileSize - 1 })) {
       result.push(row)
-      expect(offset).toBe(bytes)
+      expect(byteOffset).toBe(bytes)
       bytes += byteCount
     }
     revoke()
