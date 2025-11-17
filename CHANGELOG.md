@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.0.5]
+
+- export Newline type
+
 ## [0.0.4]
 
 - export parse result types

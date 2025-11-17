@@ -1,6 +1,5 @@
+import type { Newline } from '../types'
 import { escapeRegExp } from '../utils'
-
-export type Newline = '\n' | '\r' | '\r\n'
 
 /**
  * Returns the newline string to be used in parsing.

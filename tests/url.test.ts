@@ -110,7 +110,7 @@ describe('parseURL, while mocking parse, ', () => {
           byteOffset: 0,
           byteCount: 2 * text.length,
           charCount: 2 * text.length,
-          newline: '\n',
+          newline: '\n' as const,
           // quote: '"',
           delimiter: ',',
         },
@@ -150,7 +150,7 @@ describe('Papaparse high-level tests', () => {
         expect(charCount).toBe(test.expected.meta?.charCount)
       }
       if (test.expected.meta?.newline !== undefined) {
-        const newlines = new Set(result.map(({ meta }) => meta.newline))
+        const newlines = new Set(result.map(({ meta }) => meta.newline as string))
         expect(newlines.size).toBe(1)
         expect(newlines.has(test.expected.meta?.newline)).toBe(true)
       }

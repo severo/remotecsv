@@ -1,3 +1,5 @@
+export type Newline = '\n' | '\r' | '\r\n'
+
 /** Error structure */
 export interface ParseError {
   /** A generalization of the error */
@@ -18,7 +20,7 @@ export interface ParseMeta {
   /** Delimiter used */
   delimiter: string
   /** Line break sequence used */
-  newline: string
+  newline: Newline
   /** Byte offset at the start of the row */
   byteOffset: number
   /** Number of bytes consumed in this row */
