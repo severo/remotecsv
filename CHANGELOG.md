@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.0.4]
+
+- export parse result types
+
 ## [0.0.3]
 
 - handle invalid bytes at the start of a range
