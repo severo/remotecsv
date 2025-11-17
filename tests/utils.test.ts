@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { decode, escapeRegExp, testEmptyLine, toUrl } from '../src/utils'
+import { decode, escapeRegExp, isEmptyLine, toUrl } from '../src/utils'
 
 describe('toUrl', () => {
   it('creates a valid blob URL and revokes it', async () => {
@@ -59,20 +59,21 @@ describe('escapeRegExp', () => {
   })
 })
 
-describe('testEmptyLine', () => {
-  it.for([true, false, undefined])('detects empty lines correctly with skipEmptyLines being: %s (same behavior!)', (skipEmptyLines) => {
-    expect(testEmptyLine([''], skipEmptyLines)).toBe(true)
-    expect(testEmptyLine(['\t'], skipEmptyLines)).toBe(false)
-    expect(testEmptyLine(['   '], skipEmptyLines)).toBe(false)
-    expect(testEmptyLine(['', ''], skipEmptyLines)).toBe(false)
-    expect(testEmptyLine(['data'], skipEmptyLines)).toBe(false)
+describe('isEmptyLine', () => {
+  it.for([undefined, {}, { greedy: false }])('detects empty lines correctly with options being: %s (same behavior!)', (options) => {
+    expect(isEmptyLine([''], options)).toBe(true)
+    expect(isEmptyLine(['\t'], options)).toBe(false)
+    expect(isEmptyLine(['   '], options)).toBe(false)
+    expect(isEmptyLine(['', ''], options)).toBe(false)
+    expect(isEmptyLine(['data'], options)).toBe(false)
   })
 
-  it('detects empty lines correctly with skipEmptyLines as "greedy"', () => {
-    expect(testEmptyLine([''], 'greedy')).toBe(true)
-    expect(testEmptyLine(['   '], 'greedy')).toBe(true)
-    expect(testEmptyLine([' \t', ' '], 'greedy')).toBe(true)
-    expect(testEmptyLine(['data'], 'greedy')).toBe(false)
+  it('detects empty lines correctly with options {greedy: true}', () => {
+    const options = { greedy: true }
+    expect(isEmptyLine([''], options)).toBe(true)
+    expect(isEmptyLine(['   '], options)).toBe(true)
+    expect(isEmptyLine([' \t', ' '], options)).toBe(true)
+    expect(isEmptyLine(['data'], options)).toBe(false)
   })
 })
 

@@ -1,6 +1,6 @@
 import { parse } from '../parser'
 import type { Newline } from '../types'
-import { testEmptyLine } from '../utils'
+import { isEmptyLine } from '../utils'
 import { BAD_DELIMITERS, RECORD_SEP, UNIT_SEP } from './constants'
 
 /**
@@ -50,7 +50,7 @@ export function guessDelimiter(text: string, newline?: Newline, comments?: boole
         break
       }
       // always remove empty lines from consideration
-      if (testEmptyLine(row, true)) {
+      if (isEmptyLine(row)) {
         continue
       }
       nonEmptyLinesCount++
