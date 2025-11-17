@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { parseText } from '../src/text'
-import { testEmptyLine } from '../src/utils'
+import { isEmptyLine } from '../src/utils'
 import { PARSE_TESTS } from './cases'
 
 describe('parseText', () => {
@@ -34,8 +34,8 @@ describe('parseText', () => {
     { description: ', with empty text', text: '', expected: [] },
     { description: ', with first line only whitespace', text: ' \na,b,c', expected: [[' '], ['a', 'b', 'c']] },
     { description: ', with comments', text: '#comment line 1\n#comment line 2\na,b,c\n#comment line 3\nd,e,f\n', expected: [['a', 'b', 'c'], ['d', 'e', 'f']] },
-  ])('works together with testEmptyLine to skip empty lines$description', ({ text, expected }) => {
-    const results = [...parseText(text, { comments: '#' })].filter(({ row }) => !testEmptyLine(row, true))
+  ])('works together with isEmptyLine to skip empty lines$description', ({ text, expected }) => {
+    const results = [...parseText(text, { comments: '#' })].filter(({ row }) => !isEmptyLine(row))
 
     expect(results.map(({ row }) => row)).toEqual(expected)
   })
@@ -43,8 +43,8 @@ describe('parseText', () => {
   it.for([
     { description: '', text: 'a,b\n\n,\nc,d\n , \n""," "\n\t,\t\n,,,,\n', expected: [['a', 'b'], ['c', 'd']] },
     { description: ', with quotes and delimiters as content', text: 'a,b\n\n,\nc,d\n" , ",","\n""" """,""""""\n\n\n', expected: [['a', 'b'], ['c', 'd'], [' , ', ','], ['" "', '""']] },
-  ])('works together with testEmptyLine to skip empty lines, in greedy mode$description', ({ text, expected }) => {
-    const results = [...parseText(text)].filter(({ row }) => !testEmptyLine(row, 'greedy'))
+  ])('works together with isEmptyLine to skip empty lines, in greedy mode$description', ({ text, expected }) => {
+    const results = [...parseText(text)].filter(({ row }) => !isEmptyLine(row, { greedy: true }))
 
     expect(results.map(({ row }) => row)).toEqual(expected)
   })

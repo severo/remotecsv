@@ -75,9 +75,10 @@ export function escapeRegExp(string: string) {
 /**
  * Test if the string array is an empty line
  * @param s The string array
- * @param skipEmptyLines If 'greedy', trims all spaces to test for emptiness
+ * @param options Options
+ * @param options.greedy If true, trims all spaces to test for emptiness. Defaults to false.
  * @returns Whether the line is empty
  */
-export function testEmptyLine(s: string[], skipEmptyLines?: 'greedy' | boolean) {
-  return skipEmptyLines === 'greedy' ? s.join('').trim() === '' : 0 in s && s.length === 1 && s[0].length === 0
+export function isEmptyLine(s: string[], options: { greedy?: boolean } = {}) {
+  return options.greedy ? s.join('').trim() === '' : 0 in s && s.length === 1 && s[0].length === 0
 }
