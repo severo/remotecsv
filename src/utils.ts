@@ -73,7 +73,7 @@ export function escapeRegExp(string: string) {
 }
 
 /**
- * Test if the string array is an empty line
+ * Check if the string array is an empty line
  * @param s The string array
  * @param options Options
  * @param options.greedy If true, trims all spaces to test for emptiness. Defaults to false.
