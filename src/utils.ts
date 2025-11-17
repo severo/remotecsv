@@ -20,27 +20,6 @@ export function toUrl(text: string): {
   }
 }
 
-// From PapaParse (https://www.papaparse.com/)
-
-/**
- * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions
- * @param string The string to escape.
- * @returns The escaped string.
- */
-export function escapeRegExp(string: string) {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') // $& means the whole matched string
-}
-
-/**
- * Test if the string array is an empty line
- * @param s The string array
- * @param skipEmptyLines If 'greedy', trims all spaces to test for emptiness
- * @returns Whether the line is empty
- */
-export function testEmptyLine(s: string[], skipEmptyLines?: 'greedy' | boolean) {
-  return skipEmptyLines === 'greedy' ? s.join('').trim() === '' : 0 in s && s.length === 1 && s[0].length === 0
-}
-
 /**
  * Decodes the given bytes using the provided decoder.
  * @param bytes The bytes to decode.
@@ -80,4 +59,25 @@ export function decode(bytes: Uint8Array<ArrayBufferLike>, { stripInvalidBytesAt
     text: '',
     invalidByteCount: bytes.length,
   }
+}
+
+// From PapaParse (https://www.papaparse.com/)
+
+/**
+ * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions
+ * @param string The string to escape.
+ * @returns The escaped string.
+ */
+export function escapeRegExp(string: string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') // $& means the whole matched string
+}
+
+/**
+ * Test if the string array is an empty line
+ * @param s The string array
+ * @param skipEmptyLines If 'greedy', trims all spaces to test for emptiness
+ * @returns Whether the line is empty
+ */
+export function testEmptyLine(s: string[], skipEmptyLines?: 'greedy' | boolean) {
+  return skipEmptyLines === 'greedy' ? s.join('').trim() === '' : 0 in s && s.length === 1 && s[0].length === 0
 }
