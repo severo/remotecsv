@@ -17,7 +17,7 @@ describe('Papaparse core parser tests', () => {
         expect(charCount).toBe(test.expected.meta?.charCount)
       }
       if (test.expected.meta?.newline !== undefined) {
-        const newlines = new Set(result.map(({ meta }) => meta.newline))
+        const newlines = new Set<string>(result.map(({ meta }) => meta.newline as string))
         expect(newlines.size).toBe(1)
         expect(newlines.has(test.expected.meta?.newline)).toBe(true)
       }

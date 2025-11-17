@@ -1,7 +1,7 @@
 import { parse } from '../parser'
+import type { Newline } from '../types'
 import { testEmptyLine } from '../utils'
 import { BAD_DELIMITERS, RECORD_SEP, UNIT_SEP } from './constants'
-import type { Newline } from './newline'
 
 /**
  * Validates the delimiter

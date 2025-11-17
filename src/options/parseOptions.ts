@@ -1,8 +1,9 @@
+import type { Newline } from '../types'
 import { validateComments } from './comments'
 import { DefaultDelimiter } from './constants'
 import { guessDelimiter, validateDelimiter } from './delimiter'
 import { validateEscapeChar } from './escapeChar'
-import { guessLineEndings, type Newline, validateNewline } from './newline'
+import { guessLineEndings, validateNewline } from './newline'
 import { validateQuoteChar } from './quoteChar'
 
 export interface ParseOptions {
