@@ -3,7 +3,7 @@
  * @param text The text to create a blob URL from.
  * @returns An object containing the blob URL, the size of the text in bytes, and a function to revoke the URL.
  */
-export function toUrl(text: string): {
+export function toURL(text: string): {
   url: string
   fileSize: number
   revoke: () => void

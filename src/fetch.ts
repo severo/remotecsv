@@ -15,7 +15,7 @@
  * const result = fetchChunk({ url, chunkSize, firstByte, maxLastByte: fileSize - 1 })
  * ```
  *
- * See `toUrl` in `src/url.ts` for a helper function that creates such URLs.
+ * See `toURL` in `src/url.ts` for a helper function that creates such URLs.
  * @param options Options for fetching the chunk.
  * @param options.url The URL of the remote file.
  * @param options.chunkSize The size of the chunk to fetch.

@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { decode, escapeRegExp, isEmptyLine, toUrl } from '../src/utils'
+import { decode, escapeRegExp, isEmptyLine, toURL } from '../src/utils'
 
-describe('toUrl', () => {
+describe('toURL', () => {
   it('creates a valid blob URL and revokes it', async () => {
     const text = 'Hello, world!'
-    const { url, revoke } = toUrl(text)
+    const { url, revoke } = toURL(text)
     expect(url).toMatch(/^blob:/)
     // After revocation, fetching the URL should fail
     revoke()
@@ -13,7 +13,7 @@ describe('toUrl', () => {
   })
   it('includes an extra space to fix Node.js issue and returns correct file size', async () => {
     const text = 'Sample text in ASCII (1 char = 1 byte)'
-    const { url, fileSize } = toUrl(text)
+    const { url, fileSize } = toURL(text)
     expect(fileSize).toBe(text.length)
 
     // Fetch the blob URL to verify its content
@@ -32,14 +32,14 @@ describe('toUrl', () => {
   })
   it('correctly calculates file size for multi-byte characters', async () => {
     const text = 'こんにちは' // "Hello" in Japanese, 5 characters but more than 5 bytes
-    const { fileSize } = toUrl(text)
+    const { fileSize } = toURL(text)
     const encoder = new TextEncoder()
     const encoded = encoder.encode(text)
     expect(fileSize).toBe(encoded.length)
   })
   it('allows an empty string', async () => {
     const text = ''
-    const { url, fileSize } = toUrl(text)
+    const { url, fileSize } = toURL(text)
     expect(fileSize).toBe(0)
 
     const response = await fetch(url)

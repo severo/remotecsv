@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.0.7]
+
+- export toURL utility function
+
 ## [0.0.6]
 
 - rename testEmptyLine to isEmptyLine, change its signature to accept options object with greedy property
