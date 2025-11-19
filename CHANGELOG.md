@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [0.0.8]
+
+- return with no iteration if the URL is an empty Blob URL
+- return with no iteration if the byte range is invalid
+
 ## [0.0.7]
 
 - export toURL utility function

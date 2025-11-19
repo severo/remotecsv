@@ -1,22 +1,47 @@
 /**
  * Creates a blob URL from the given text.
  * @param text The text to create a blob URL from.
- * @returns An object containing the blob URL, the size of the text in bytes, and a function to revoke the URL.
+ * @param options Options.
+ * @param options.withNodeWorkaround Whether to add an extra space at the end of the text
+ * to work around the Node.js bug (https://github.com/nodejs/node/issues/60382). Defaults to false.
+ * @returns An object containing the blob URL, the size of the file in bytes (without the extra space,
+ *  if `withNodeWorkaround` is true), and a function to revoke the URL.
  */
-export function toURL(text: string): {
+export function toURL(text: string, { withNodeWorkaround }: { withNodeWorkaround?: boolean } = {}): {
   url: string
   fileSize: number
   revoke: () => void
 } {
+  withNodeWorkaround = withNodeWorkaround ?? false
   // add an extra space to fix https://github.com/nodejs/node/issues/60382
-  const blob = new Blob([text + ' '])
+  const blob = new Blob([withNodeWorkaround ? text + ' ' : text])
   const url = URL.createObjectURL(blob)
   return {
     url,
-    fileSize: blob.size - 1, // subtract the extra space
+    // remove the extra space from the file size
+    fileSize: withNodeWorkaround ? blob.size - 1 : blob.size,
     revoke: () => {
       URL.revokeObjectURL(url)
     },
+  }
+}
+
+/**
+ * Checks if the given URL is an empty Blob URL.
+ * @param url The URL to check.
+ * @returns Whether the URL is an empty Blob URL.
+ */
+export async function isEmptyBlobURL(url: string): Promise<boolean> {
+  if (!url.startsWith('blob:')) {
+    return false
+  }
+  try {
+    const response = await fetch(url)
+    const blob = await response.blob()
+    return blob.size === 0
+  }
+  catch {
+    return false
   }
 }
 

@@ -78,6 +78,10 @@ export async function fetchRange({
     },
   }
   const response = await fetch(url, mergedRequestInit)
+  // Note that the range fetch might throw if the range is invalid, and the URL is a Blob URL.
+  // With "normal" URLs (http, https), the server should return a 416 status code instead.
+  // See the spec https://fetch.spec.whatwg.org/#scheme-fetch.
+
   if (response.status === 416) {
     // Requested Range Not Satisfiable
     throw new Error(

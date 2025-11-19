@@ -4,7 +4,7 @@ import { defaultChunkSize } from './options/constants'
 import { type DelimiterError, type ParseOptions, validateAndGuessParseOptions } from './options/parseOptions'
 import { parse } from './parser'
 import type { ParseResult } from './types'
-import { decode } from './utils'
+import { decode, isEmptyBlobURL } from './utils'
 
 interface FetchOptions {
   chunkSize?: number
@@ -45,7 +45,19 @@ export async function* parseURL(
 ): AsyncGenerator<ParseResult, void, unknown> {
   const chunkSize = checkIntegerGreaterOrEqualThan(options.chunkSize, 1) ?? defaultChunkSize
   let firstByte = checkIntegerGreaterOrEqualThan(options.firstByte, 0) ?? 0
+  // Note: lastByte can be -1 to indicate no data to fetch.
+  // It's related to the bug in Node.js (https://github.com/nodejs/node/issues/60382) and the
+  // workaround we propose with toURL util (add ' ' at the end of the file, and set lastByte
+  // to the original file size - 1). If the file is empty, lastByte will be -1.
   let lastByte = checkIntegerGreaterOrEqualThan(options.lastByte, -1)
+  if (lastByte !== undefined && lastByte < firstByte) {
+    // No data to fetch
+    return
+  }
+  // Return if the URL is an empty Blob URL
+  if (await isEmptyBlobURL(url)) {
+    return
+  }
 
   const { delimitersToGuess, stripBOM } = options
   let parseOptions: ParseOptions | undefined = undefined

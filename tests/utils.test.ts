@@ -1,53 +1,94 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, inject, it } from 'vitest'
 
-import { decode, escapeRegExp, isEmptyLine, toURL } from '../src/utils'
+import { decode, escapeRegExp, isEmptyBlobURL, isEmptyLine, toURL } from '../src/utils'
 
-describe('toURL', () => {
-  it('creates a valid blob URL and revokes it', async () => {
-    const text = 'Hello, world!'
-    const { url, revoke } = toURL(text)
-    expect(url).toMatch(/^blob:/)
-    // After revocation, fetching the URL should fail
-    revoke()
-    await expect(fetch(url)).rejects.toThrow()
+describe.each(inject('withNodeWorkaround'))('using withNodeWorkaround: %s', (withNodeWorkaround) => {
+  describe('toURL', () => {
+    it.each([undefined, true, false])('creates a valid blob URL and revokes it', async (withNodeWorkaround) => {
+      const text = 'Hello, world!'
+      const { url, revoke } = toURL(text, { withNodeWorkaround })
+      expect(url).toMatch(/^blob:/)
+      // After revocation, fetching the URL should fail
+      revoke()
+      await expect(fetch(url)).rejects.toThrow()
+    })
+    it.skipIf(withNodeWorkaround !== true)('includes an extra space to fix Node.js issue and returns correct file size', async () => {
+      const text = 'Sample text in ASCII (1 char = 1 byte)'
+      const { url, fileSize } = toURL(text, { withNodeWorkaround: true })
+      expect(fileSize).toBe(text.length)
+
+      // Fetch the blob URL to verify its content
+      const response = await fetch(url)
+      expect(response.ok).toBe(true)
+
+      // +1 for the extra space (added to fix Node.js issue)
+      expect(response.headers.get('Content-Length')).toBe(String(fileSize + 1))
+
+      // Check for the extra space
+      const data = await response.text()
+      expect(data.at(-1)).toBe(' ')
+
+      // Check the original text, after removing the extra space
+      expect(data.slice(0, -1)).toBe(text)
+    })
+    it('correctly calculates file size for multi-byte characters', async () => {
+      const text = 'こんにちは' // "Hello" in Japanese, 5 characters but more than 5 bytes
+      const { fileSize } = toURL(text, { withNodeWorkaround })
+      const encoder = new TextEncoder()
+      const encoded = encoder.encode(text)
+      expect(fileSize).toBe(encoded.length)
+    })
+    it('allows an empty string', async () => {
+      const text = ''
+      const { url, fileSize } = toURL(text, { withNodeWorkaround })
+      expect(fileSize).toBe(0)
+
+      const response = await fetch(url)
+      expect(response.ok).toBe(true)
+      expect(response.headers.get('Content-Length')).toBe(withNodeWorkaround ? '1' : '0')
+
+      const data = await response.text()
+      expect(data).toBe(withNodeWorkaround ? ' ' : '')
+    })
+    it.skipIf(withNodeWorkaround === true)('throws when doing a range request on empty Blob URL, with browser, without withNodeWorkaround', async () => {
+      const text = ''
+      const { url, fileSize } = toURL(text, { withNodeWorkaround })
+      expect(fileSize).toBe(0)
+
+      await expect(async () => {
+        return await fetch(url, { headers: { Range: 'bytes=100-200' } })
+      }).rejects.toThrow()
+
+      URL.revokeObjectURL(url)
+    })
   })
-  it('includes an extra space to fix Node.js issue and returns correct file size', async () => {
-    const text = 'Sample text in ASCII (1 char = 1 byte)'
-    const { url, fileSize } = toURL(text)
-    expect(fileSize).toBe(text.length)
+})
 
-    // Fetch the blob URL to verify its content
-    const response = await fetch(url)
-    expect(response.ok).toBe(true)
-
-    // +1 for the extra space (added to fix Node.js issue)
-    expect(response.headers.get('Content-Length')).toBe(String(fileSize + 1))
-
-    // Check for the extra space
-    const data = await response.text()
-    expect(data.at(-1)).toBe(' ')
-
-    // Check the original text, after removing the extra space
-    expect(data.slice(0, -1)).toBe(text)
+describe('isEmptyBlobURL', () => {
+  it('returns true for an empty Blob URL', async () => {
+    const url = URL.createObjectURL(new Blob(['']))
+    const result = await isEmptyBlobURL(url)
+    expect(result).toBe(true)
+    URL.revokeObjectURL(url)
   })
-  it('correctly calculates file size for multi-byte characters', async () => {
-    const text = 'こんにちは' // "Hello" in Japanese, 5 characters but more than 5 bytes
-    const { fileSize } = toURL(text)
-    const encoder = new TextEncoder()
-    const encoded = encoder.encode(text)
-    expect(fileSize).toBe(encoded.length)
+
+  it('returns false for a non-empty Blob URL', async () => {
+    const url = URL.createObjectURL(new Blob(['data']))
+    const result = await isEmptyBlobURL(url)
+    expect(result).toBe(false)
+    URL.revokeObjectURL(url)
   })
-  it('allows an empty string', async () => {
-    const text = ''
-    const { url, fileSize } = toURL(text)
-    expect(fileSize).toBe(0)
 
-    const response = await fetch(url)
-    expect(response.ok).toBe(true)
-    expect(response.headers.get('Content-Length')).toBe('1') // 1 byte for the extra space
+  it('returns false for a non-Blob URL', async () => {
+    const url = 'https://example.com/data.csv'
+    const result = await isEmptyBlobURL(url)
+    expect(result).toBe(false)
+  })
 
-    const data = await response.text()
-    expect(data).toBe(' ') // only the extra space
+  it('returns false for an invalid Blob URL', async () => {
+    const url = 'blob:invalid-url'
+    const result = await isEmptyBlobURL(url)
+    expect(result).toBe(false)
   })
 })
 

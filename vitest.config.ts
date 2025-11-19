@@ -1,6 +1,12 @@
 import { playwright } from '@vitest/browser-playwright'
 import { defineConfig } from 'vitest/config'
 
+declare module 'vitest' {
+  export interface ProvidedContext {
+    withNodeWorkaround: (boolean | undefined)[]
+  }
+}
+
 export default defineConfig({
   test: {
     projects: [
@@ -8,6 +14,10 @@ export default defineConfig({
         test: {
           name: 'node',
           environment: 'node',
+          globals: true,
+          provide: {
+            withNodeWorkaround: [true],
+          },
         },
       },
       {
@@ -25,6 +35,11 @@ export default defineConfig({
               // webkit is not working on my machine
               // { browser: 'webkit' },
             ],
+          },
+          globals: true,
+
+          provide: {
+            withNodeWorkaround: [true, false, undefined],
           },
         },
       },
