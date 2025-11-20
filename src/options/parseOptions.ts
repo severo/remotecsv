@@ -1,22 +1,15 @@
-import type { Newline } from '../types'
+import type { DelimiterError, ParseOptions, State } from '../types'
 import { validateComments } from './comments'
 import { DefaultDelimiter } from './constants'
 import { guessDelimiter, validateDelimiter } from './delimiter'
 import { validateEscapeChar } from './escapeChar'
+import { type EvaluationScore, getScore, isBetterScore } from './initialState'
 import { guessLineEndings, validateNewline } from './newline'
 import { validateQuoteChar } from './quoteChar'
 
-export interface ParseOptions {
-  delimiter?: string
-  newline?: Newline
-  quoteChar?: string
-  escapeChar?: string
-  comments?: boolean | string
-}
-export interface DelimiterError {
-  type: 'Delimiter'
-  code: 'UndetectableDelimiter'
-  message: string
+interface OptionsResult {
+  parseOptions: ParseOptions
+  error?: DelimiterError
 }
 
 /**
@@ -27,6 +20,7 @@ export interface DelimiterError {
  * @param parseOptions.quoteChar The quote character used in the CSV data. Defaults to '"'.
  * @param parseOptions.escapeChar The escape character used in the CSV data. Defaults to the quote character.
  * @param parseOptions.comments The comment character or boolean to indicate comments.
+ * @param parseOptions.initialState The initial state for the parser. Use 'detect' to automatically detect the initial state. Defaults to 'default'.
  * @param params The parameters for validation and guessing.
  * @param params.text The string to use for guessing.
  * @param params.delimitersToGuess The list of delimiters to guess from.
@@ -35,10 +29,33 @@ export interface DelimiterError {
 export function validateAndGuessParseOptions(parseOptions: ParseOptions, { text, delimitersToGuess}: {
   text: string
   delimitersToGuess?: string[]
-}): {
-  parseOptions: ParseOptions
-  error?: DelimiterError
-} {
+}): OptionsResult {
+  // Guess initial state if needed
+  const initialState = parseOptions.initialState ?? 'default'
+  if (initialState === 'detect') {
+    const result = validateAndGuessParseOptions(
+      { ...parseOptions, initialState: 'default' },
+      { text, delimitersToGuess },
+    )
+    let best: { state: State, score: EvaluationScore, result: OptionsResult } = {
+      state: 'default' as const,
+      score: getScore({ text, parseOptions: result.parseOptions }),
+      result,
+    }
+    for (const candidateState of ['inQuotes' as const]) {
+      const result = validateAndGuessParseOptions(
+        { ...parseOptions, initialState: candidateState },
+        { text, delimitersToGuess },
+      )
+      const score = getScore({ text, parseOptions: result.parseOptions })
+      if (!best || isBetterScore({ best: best.score, candidate: score })) {
+        best = { state: candidateState, score, result }
+      }
+    }
+    return best.result
+  }
+
+  // Validate and guess other options
   const quoteChar = validateQuoteChar(parseOptions.quoteChar)
   const escapeChar = validateEscapeChar(parseOptions.escapeChar) ?? quoteChar
   const newline = validateNewline(parseOptions.newline) ?? guessLineEndings(text, quoteChar)
@@ -60,7 +77,7 @@ export function validateAndGuessParseOptions(parseOptions: ParseOptions, { text,
     }
   }
   return {
-    parseOptions: { delimiter, newline, quoteChar, escapeChar, comments },
+    parseOptions: { delimiter, newline, quoteChar, escapeChar, comments, initialState },
     error,
   }
 }
@@ -71,6 +88,7 @@ export interface ValidParseOptions {
   comments: string | false
   quoteChar: string
   escapeChar: string
+  initialState: State
 }
 
 /**
@@ -81,6 +99,7 @@ export interface ValidParseOptions {
  * @param parseOptions.quoteChar The quote character used in the CSV data. Defaults to '"'.
  * @param parseOptions.escapeChar The escape character used in the CSV data. Defaults to the quote character.
  * @param parseOptions.comments The comment character or boolean to indicate comments.
+ * @param parseOptions.initialState The initial state for the parser. 'detect' is not accepted here. Defaults to 'default'.
  * @returns The validated options
  */
 export function validateAndSetDefaultParseOptions(parseOptions?: ParseOptions): ValidParseOptions {
@@ -98,11 +117,18 @@ export function validateAndSetDefaultParseOptions(parseOptions?: ParseOptions): 
   // Newline must be: \r, \n, or \r\n (enforced by type system). Defaults to \n.
   const newline = validateNewline(parseOptions?.newline) ?? '\n'
 
+  // initialState must not be 'detect' here
+  const initialState = parseOptions?.initialState ?? 'default'
+  if (initialState === 'detect') {
+    throw new Error('Initial state \'detect\' is not allowed.')
+  }
+
   return {
     delimiter,
     newline,
     comments,
     quoteChar,
     escapeChar,
+    initialState,
   }
 }

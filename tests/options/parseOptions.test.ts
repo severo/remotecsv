@@ -19,6 +19,7 @@ describe('validateAndSetDefaultParseOptions', () => {
       quoteChar: '\'',
       escapeChar: '\\',
       comments: '#',
+      initialState: 'inQuotes' as const,
     }
     const options = validateAndSetDefaultParseOptions(inputOptions)
     expect(options).toEqual(inputOptions)

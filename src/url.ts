@@ -1,9 +1,9 @@
 import { fetchChunk } from './fetch'
 import { checkIntegerGreaterOrEqualThan } from './options/check'
 import { defaultChunkSize } from './options/constants'
-import { type DelimiterError, type ParseOptions, validateAndGuessParseOptions } from './options/parseOptions'
+import { validateAndGuessParseOptions } from './options/parseOptions'
 import { parse } from './parser'
-import type { ParseResult } from './types'
+import type { DelimiterError, ParseOptions, ParseResult } from './types'
 import { decode, isEmptyBlobURL } from './utils'
 
 interface FetchOptions {
@@ -36,6 +36,7 @@ interface parseURLOptions extends ParseOptions, FetchOptions {
  * @param options.comments The comment character or boolean to indicate comments. Defaults to false (don't strip comments).
  * @param options.delimitersToGuess The list of delimiters to guess from
  * @param options.stripBOM Whether to strip the BOM character at the start of the text. Defaults to true.
+ * @param options.initialState Initial state for the parser. Use 'detect' to automatically detect the initial state. Defaults to 'default'.
  * @yields Parsed rows along with metadata.
  * @returns An async generator that yields parsed rows.
  */

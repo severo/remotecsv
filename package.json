@@ -1,6 +1,6 @@
 {
   "name": "csv-range",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Parse ranges of a CSV file.",
   "type": "module",
   "license": "MIT",
