@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.0.9]
+
+- add initialState option to parse options ('inQuotes' | 'detect' | 'default')
+
 ## [0.0.8]
 
 - return with no iteration if the URL is an empty Blob URL

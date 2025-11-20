@@ -48,6 +48,28 @@ describe('parseText', () => {
 
     expect(results.map(({ row }) => row)).toEqual(expected)
   })
+
+  it('detects that the initial state is inQuotes', () => {
+    const text = 'a\na\na\na","b\nb",c\n"1\n1",2,3\n"4\n4",5,6'
+    const result = [...parseText(text, { initialState: 'detect' })]
+    const data = result.map(({ row }) => row)
+    expect(data).toStrictEqual([
+      ['a\na\na\na', 'b\nb', 'c'],
+      ['1\n1', '2', '3'],
+      ['4\n4', '5', '6'],
+    ])
+  })
+
+  it('detects that the initial state is default', () => {
+    const text = '"a\na\na\na","b\nb",c\n"1\n1",2,3\n"4\n4",5,6'
+    const result = [...parseText(text, { initialState: 'detect' })]
+    const data = result.map(({ row }) => row)
+    expect(data).toStrictEqual([
+      ['a\na\na\na', 'b\nb', 'c'],
+      ['1\n1', '2', '3'],
+      ['4\n4', '5', '6'],
+    ])
+  })
 })
 
 describe('Papaparse high-level tests', () => {

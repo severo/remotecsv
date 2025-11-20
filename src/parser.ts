@@ -1,6 +1,7 @@
 // Adapted from PapaParse (https://www.papaparse.com/)
-import { type ParseOptions, validateAndSetDefaultParseOptions } from './options/parseOptions'
+import { validateAndSetDefaultParseOptions } from './options/parseOptions'
 import type { ParseError, ParseResult } from './types'
+import type { ParseOptions } from './types'
 import { escapeRegExp } from './utils'
 
 /**
@@ -12,6 +13,7 @@ import { escapeRegExp } from './utils'
  * @param options.quoteChar The quote character used in the CSV data. Defaults to '"'.
  * @param options.escapeChar The escape character used in the CSV data. Defaults to the quote character.
  * @param options.comments The comment character or boolean to indicate comments. Defaults to false (don't strip comments).
+ * @param options.initialState Initial state for the parser. Use 'detect' to automatically detect the initial state. Defaults to 'default'.
  * @param options.ignoreLastRow Whether to ignore the last row. Defaults to false.
  * @param options.stripBOM Whether to strip the BOM character at the start of the text. Defaults to true.
  * @yields The parse results, one row at a time
@@ -27,9 +29,25 @@ export function* parse(text: string, options: ParseOptions & {
     comments,
     quoteChar,
     escapeChar,
+    initialState,
   } = validateAndSetDefaultParseOptions(options)
   const ignoreLastRow = options?.ignoreLastRow ?? false
   const stripBOM = options?.stripBOM ?? true
+
+  // If initialState is 'inQuotes', we need to prepend a quote to the text
+  let prependedBytes = 0
+  let prependedChars = 0
+  if (initialState === 'inQuotes') {
+    if (stripBOM && text.charCodeAt(0) === 0xfeff) {
+      // If there's a BOM and we will strip it, we need to insert the quote after the BOM
+      text = '\ufeff' + quoteChar + text.slice(1)
+    }
+    else {
+      text = quoteChar + text
+    }
+    prependedBytes = new TextEncoder().encode(quoteChar).length
+    prependedChars = quoteChar.length
+  }
 
   // We don't need to compute some of these every time parse() is called,
   // but having them in a more local scope seems to perform better
@@ -44,9 +62,10 @@ export function* parse(text: string, options: ParseOptions & {
   let cursor = 0
   let lastCursor = 0
   let byteOffset = 0
+  let isFirstRow = true
 
   if (stripBOM && text.charCodeAt(0) === 0xfeff) {
-    cursor = 1
+    cursor += 1
   }
 
   let nextDelim = text.indexOf(delimiter, cursor)
@@ -231,6 +250,8 @@ export function* parse(text: string, options: ParseOptions & {
     // the row started at lastCursor, ended at cursor
     const string = text.substring(lastCursor, cursor)
     const byteCount = new TextEncoder().encode(string).length
+    const charCount = string.length + (isFirstRow ? prependedChars : 0)
+    isFirstRow = false
 
     const result = {
       row,
@@ -238,9 +259,9 @@ export function* parse(text: string, options: ParseOptions & {
       meta: {
         delimiter,
         newline,
-        byteOffset,
+        byteOffset: byteOffset - prependedBytes,
         byteCount,
-        charCount: string.length,
+        charCount,
       },
     }
     lastCursor = cursor

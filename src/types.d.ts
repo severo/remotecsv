@@ -1,5 +1,22 @@
 export type Newline = '\n' | '\r' | '\r\n'
 
+export type State = 'default' | 'inQuotes'
+
+export interface ParseOptions {
+  delimiter?: string
+  newline?: Newline
+  quoteChar?: string
+  escapeChar?: string
+  comments?: boolean | string
+  initialState?: State | 'detect'
+}
+
+export interface DelimiterError {
+  type: 'Delimiter'
+  code: 'UndetectableDelimiter'
+  message: string
+}
+
 /** Error structure */
 export interface ParseError {
   /** A generalization of the error */
