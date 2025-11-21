@@ -66,7 +66,7 @@ export function validateAndGuessParseOptions(parseOptions: ParseOptions, { text,
   let error: DelimiterError | undefined
   let delimiter = validateDelimiter(parseOptions.delimiter)
   if (!delimiter) {
-    const delimGuess = guessDelimiter(text, newline, comments, delimitersToGuess)
+    const delimGuess = guessDelimiter({ text, newline, comments, delimitersToGuess, previewLines })
     if (delimGuess.successful)
       delimiter = delimGuess.bestDelimiter
     else {

@@ -1,7 +1,7 @@
 import { parse } from '../parser'
 import type { Newline } from '../types'
 import { isEmptyLine } from '../utils'
-import { BAD_DELIMITERS, RECORD_SEP, UNIT_SEP } from './constants'
+import { BAD_DELIMITERS, defaultPreviewLines, RECORD_SEP, UNIT_SEP } from './constants'
 
 /**
  * Validates the delimiter
@@ -20,13 +20,23 @@ export function validateDelimiter(delimiter?: string): undefined | string {
 
 /**
  * Guess the delimiter
- * @param text The string
- * @param newline The newline character
- * @param comments The comment character or boolean to indicate comments
- * @param delimitersToGuess The list of delimiters to guess from
+ * @param options The options for guessing the delimiter
+ * @param options.text The string
+ * @param options.newline The newline character
+ * @param options.comments The comment character or boolean to indicate comments
+ * @param options.delimitersToGuess The list of delimiters to guess from
+ * @param options.previewLines The number of lines to preview for guessing. Defaults to 10.
  * @returns An object indicating whether guessing was successful and the best delimiter found
  */
-export function guessDelimiter(text: string, newline?: Newline, comments?: boolean | string, delimitersToGuess?: string[]) {
+export function guessDelimiter({ text, newline, comments, delimitersToGuess, previewLines }: {
+  text: string
+  newline?: Newline
+  comments?: boolean | string
+  delimitersToGuess?: string[]
+  previewLines?: number
+}) {
+  previewLines = previewLines ?? defaultPreviewLines
+
   let bestDelimiter, bestDelta, maxFieldCount
 
   delimitersToGuess = delimitersToGuess || [',', '\t', '|', ';', RECORD_SEP, UNIT_SEP]
@@ -38,7 +48,6 @@ export function guessDelimiter(text: string, newline?: Newline, comments?: boole
     let avgFieldCount = 0
     let fieldCountPrevRow: number | undefined
     let j = 0
-    const previewLines = 10
 
     for (const { row } of parse(text, {
       delimiter,
