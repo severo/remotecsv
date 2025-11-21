@@ -23,13 +23,14 @@ export function getScore(params: {
   const previewLines = 30
 
   const frequencies = new Map<number, number>()
-  const j = 0
+  let j = 0
   for (const { row } of parse(text, {
     ...parseOptions, ignoreLastRow: false,
   })) {
     if (j >= previewLines) {
       break
     }
+    j++
     // always remove empty lines from consideration
     if (isEmptyLine(row)) {
       continue
@@ -37,7 +38,7 @@ export function getScore(params: {
     const fieldCount = row.length
     frequencies.set(fieldCount, (frequencies.get(fieldCount) || 0) + 1)
   }
-  const mostFrequent = Array.from(frequencies.entries()).sort((a, b) => b[1] - a[1]).slice(0).map(([columns, count]) => ({ columns, count }))[0]
+  const mostFrequent = Array.from(frequencies.entries()).sort((a, b) => b[1] - a[1]).slice(0, 1).map(([columns, count]) => ({ columns, count }))[0]
   return mostFrequent ?? {
     columns: 0,
     count: 0,

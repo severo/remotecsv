@@ -48,7 +48,7 @@ export function validateAndGuessParseOptions(parseOptions: ParseOptions, { text,
         { text, delimitersToGuess },
       )
       const score = getScore({ text, parseOptions: result.parseOptions })
-      if (!best || isBetterScore({ best: best.score, candidate: score })) {
+      if (isBetterScore({ best: best.score, candidate: score })) {
         best = { state: candidateState, score, result }
       }
     }
