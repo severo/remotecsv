@@ -2,7 +2,7 @@
 
 ## [0.0.10]
 
-- add support for previewLines option
+- add previewLines option to delimiter and initial state detection
 
 ## [0.0.9]
 
