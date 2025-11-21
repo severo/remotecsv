@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.0.10]
+
+- add previewLines option to delimiter and initial state detection
+
 ## [0.0.9]
 
 - add initialState option to parse options ('inQuotes' | 'detect' | 'default')

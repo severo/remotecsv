@@ -24,31 +24,33 @@ interface OptionsResult {
  * @param params The parameters for validation and guessing.
  * @param params.text The string to use for guessing.
  * @param params.delimitersToGuess The list of delimiters to guess from.
+ * @param params.previewLines The number of lines to preview for guessing.
  * @returns The validated and guessed parsing options, and the delimiter error (if any).
  */
-export function validateAndGuessParseOptions(parseOptions: ParseOptions, { text, delimitersToGuess}: {
+export function validateAndGuessParseOptions(parseOptions: ParseOptions, { text, delimitersToGuess, previewLines }: {
   text: string
   delimitersToGuess?: string[]
+  previewLines?: number
 }): OptionsResult {
   // Guess initial state if needed
   const initialState = parseOptions.initialState ?? 'default'
   if (initialState === 'detect') {
     const result = validateAndGuessParseOptions(
       { ...parseOptions, initialState: 'default' },
-      { text, delimitersToGuess },
+      { text, delimitersToGuess, previewLines },
     )
     let best: { state: State, score: EvaluationScore, result: OptionsResult } = {
       state: 'default' as const,
-      score: getScore({ text, parseOptions: result.parseOptions }),
+      score: getScore({ text, parseOptions: result.parseOptions, previewLines }),
       result,
     }
     for (const candidateState of ['inQuotes' as const]) {
       const result = validateAndGuessParseOptions(
         { ...parseOptions, initialState: candidateState },
-        { text, delimitersToGuess },
+        { text, delimitersToGuess, previewLines },
       )
-      const score = getScore({ text, parseOptions: result.parseOptions })
-      if (!best || isBetterScore({ best: best.score, candidate: score })) {
+      const score = getScore({ text, parseOptions: result.parseOptions, previewLines })
+      if (isBetterScore({ best: best.score, candidate: score })) {
         best = { state: candidateState, score, result }
       }
     }
@@ -64,7 +66,7 @@ export function validateAndGuessParseOptions(parseOptions: ParseOptions, { text,
   let error: DelimiterError | undefined
   let delimiter = validateDelimiter(parseOptions.delimiter)
   if (!delimiter) {
-    const delimGuess = guessDelimiter(text, newline, comments, delimitersToGuess)
+    const delimGuess = guessDelimiter({ text, newline, comments, delimitersToGuess, previewLines })
     if (delimGuess.successful)
       delimiter = delimGuess.bestDelimiter
     else {

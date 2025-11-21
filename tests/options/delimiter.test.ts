@@ -24,97 +24,109 @@ describe('validateDelimiter', () => {
 describe('guessDelimiter', () => {
   it('should guess comma as the best delimiter', () => {
     const text = 'a,b,c\n1,2,3\n4,5,6\n'
-    const result = guessDelimiter(text)
+    const result = guessDelimiter({ text })
     expect(result.bestDelimiter).toBe(',')
   })
 
   it('should guess tab as the best delimiter', () => {
     const text = 'a\tb\tc\n1\t2\t3\n4\t5\t6\n'
-    const result = guessDelimiter(text)
+    const result = guessDelimiter({ text })
     expect(result.bestDelimiter).toBe('\t')
   })
 
   it('should guess pipe as the best delimiter', () => {
     const text = 'a|b|c\n1|2|3\n4|5|6\n'
-    const result = guessDelimiter(text)
+    const result = guessDelimiter({ text })
     expect(result.bestDelimiter).toBe('|')
   })
 
   it('should guess ASCII 30 as the best delimiter', () => {
     const text = `a${RECORD_SEP}b${RECORD_SEP}c\n1${RECORD_SEP}2${RECORD_SEP}3\n4${RECORD_SEP}5${RECORD_SEP}6\n`
-    const result = guessDelimiter(text)
+    const result = guessDelimiter({ text })
     expect(result.bestDelimiter).toBe(RECORD_SEP)
   })
 
   it('should guess ASCII 31 as the best delimiter', () => {
     const text = `a${UNIT_SEP}b${UNIT_SEP}c\n1${UNIT_SEP}2${UNIT_SEP}3\n4${UNIT_SEP}5${UNIT_SEP}6\n`
-    const result = guessDelimiter(text)
+    const result = guessDelimiter({ text })
     expect(result.bestDelimiter).toBe(UNIT_SEP)
   })
 
   it('should detect delimiter even with empty lines', () => {
     const text = 'a,b\n1,2\n3,4\n'
-    const result = guessDelimiter(text, undefined)
+    const result = guessDelimiter({ text })
     expect(result.bestDelimiter).toBe(',')
   })
 
   it('should ignore comment lines while detecting delimiter in an escaped file', () => {
     const text = '#1\n#2\n#3\n#4\n#5\n#6\n#7\n#8\n#9\n#10\none,"t,w,o",three\nfour,five,six'
-    const result = guessDelimiter(text, undefined, '#')
+    const result = guessDelimiter({ text, comments: '#' })
     expect(result.bestDelimiter).toBe(',')
   })
 
   it('should ignore comment lines while detecting delimiter in an non-escaped file', () => {
     const text = '#1\n#2\n#3\n#4\n#5\n#6\n#7\n#8\n#9\n#10\n#11\none,two,three\nfour,five,six'
-    const result = guessDelimiter(text, undefined, '#')
+    const result = guessDelimiter({ text, comments: '#' })
     expect(result.bestDelimiter).toBe(',')
   })
 
   it('should guess pipe delimiter correctly when mixed with commas', () => {
     const text = 'one|two,two|three\nfour|five,five|six'
-    const result = guessDelimiter(text)
+    const result = guessDelimiter({ text })
     expect(result.bestDelimiter).toBe('|')
   })
 
   it('should guess the delimiter correctly using the average', () => {
     const text = 'a,b,c\na,b,c|d|e|f'
-    const result = guessDelimiter(text)
+    const result = guessDelimiter({ text })
     expect(result.bestDelimiter).toBe(',')
   })
 
   it('should guess pipe delimiter correctly when first field are enclosed in quotes and contain delimiter characters', () => {
     const text = '"Field1,1,1";Field2;"Field3";Field4;Field5;Field6'
-    const result = guessDelimiter(text)
+    const result = guessDelimiter({ text })
     expect(result.bestDelimiter).toBe(';')
   })
 
   it('should guess pipe delimiter correctly when some fields are enclosed in quotes and contain delimiter characters and escaped quotes', () => {
     const text = 'Field1;Field2;"Field,3,""3,3";Field4;Field5;"Field6,6"'
-    const result = guessDelimiter(text)
+    const result = guessDelimiter({ text })
     expect(result.bestDelimiter).toBe(';')
   })
 
   it('should use custom delimiters to guess from', () => {
     const text = '"A"~"B"~"C"~"D"'
-    const result = guessDelimiter(text, undefined, false, ['~', '@', '%'])
+    const result = guessDelimiter({ text, delimitersToGuess: ['~', '@', '%'] })
     expect(result.bestDelimiter).toBe('~')
   })
 
   it('should still correctly guess default delimiters when delimiters to guess are not given', () => {
     const text = '"A","B","C","D"'
-    const result = guessDelimiter(text)
+    const result = guessDelimiter({ text })
     expect(result.bestDelimiter).toBe(',')
   })
 
-  it('should only use the first 10 non-empty lines for guessing', () => {
+  it('should only use the first 10 non-empty lines for guessing by default', () => {
     const text = 'a,b,c\n1,1,1\n2,2,2\n3,3,3\n4,4,4\n5,5,5\n6,6,6\n' + 'x|y|z\n'.repeat(30)
-    const result = guessDelimiter(text)
+    const result = guessDelimiter({ text })
     expect(result.bestDelimiter).toBe(',')
+  })
+
+  it.each([
+    { previewLines: 5, expected: ',' },
+    { previewLines: 10, expected: ',' },
+    { previewLines: undefined, expected: ',' },
+    { previewLines: 15, expected: '|' },
+    { previewLines: 20, expected: '|' },
+  ])('should only use the first $previewLines non-empty lines for guessing', ({ previewLines, expected }) => {
+    const text = 'a,b,c\n1,1,1\n2,2,2\n3,3,3\n4,4,4\n5,5,5\n6,6,6\n' + 'x|y|z\n'.repeat(30)
+    const result = guessDelimiter({ text, previewLines })
+    expect(result.bestDelimiter).toBe(expected)
   })
 
   it('should return unsuccessful when no delimiter is found', () => {
     const text = 'just some random text without delimiters\nanother line without delimiters'
-    const result = guessDelimiter(text)
+    const result = guessDelimiter({ text })
     expect(result.successful).toBe(false)
     expect(result.bestDelimiter).toBeUndefined()
   })

@@ -14,6 +14,7 @@ import type { DelimiterError, ParseOptions, ParseResult } from './types'
  * @param options.initialState Initial state for the parser. Use 'detect' to automatically detect the initial state. Defaults to 'default'.
  * @param options.delimitersToGuess The list of delimiters to guess from
  * @param options.ignoreLastRow Whether to ignore the last row. Defaults to false.
+ * @param options.previewLines The number of lines to preview for guessing. Defaults to 10.
  * @param options.stripBOM Whether to strip the BOM character at the start of the text. Defaults to true.
  * @yields Parsed data and metadata.
  * @returns A generator yielding parsed data and metadata row by row.
@@ -22,10 +23,11 @@ export function* parseText(text: string,
   options: ParseOptions & {
     delimitersToGuess?: string[]
     ignoreLastRow?: boolean
+    previewLines?: number
     stripBOM?: boolean
   } = {}): Generator<ParseResult, void, unknown> {
-  const { delimitersToGuess, ignoreLastRow, stripBOM } = options
-  const { parseOptions, error } = validateAndGuessParseOptions(options, { text, delimitersToGuess })
+  const { delimitersToGuess, ignoreLastRow, previewLines, stripBOM } = options
+  const { parseOptions, error } = validateAndGuessParseOptions(options, { text, delimitersToGuess, previewLines })
 
   let delimiterError: DelimiterError | undefined = error
   for (const result of parse(text, {

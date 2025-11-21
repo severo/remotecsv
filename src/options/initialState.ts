@@ -1,10 +1,11 @@
 import { parse } from '../parser'
 import type { ParseOptions } from '../types'
 import { isEmptyLine } from '../utils'
+import { defaultPreviewLines } from './constants'
 
 export interface EvaluationScore {
   columns: number // the most frequent number of columns
-  count: number // the number of rows with the most frequent column count
+  ratio: number // the ratio of with the most frequent column count
 }
 
 /**
@@ -12,35 +13,52 @@ export interface EvaluationScore {
  * @param params Parameters object.
  * @param params.parseOptions The parse options to evaluate.
  * @param params.text The sample text.
+ * @param params.previewLines Number of lines to preview for scoring. Defaults to 30.
  * @returns The evaluation score.
  */
 export function getScore(params: {
   parseOptions: ParseOptions
   text: string
+  previewLines?: number
 }): EvaluationScore {
-  const { parseOptions, text } = params
-
-  const previewLines = 30
+  const { parseOptions, text, previewLines } = params
 
   const frequencies = new Map<number, number>()
-  const j = 0
+  let j = 0
+  let nonEmptyLines = 0
   for (const { row } of parse(text, {
     ...parseOptions, ignoreLastRow: false,
   })) {
-    if (j >= previewLines) {
+    if (j >= (previewLines ?? defaultPreviewLines)) {
       break
     }
+    j++
     // always remove empty lines from consideration
     if (isEmptyLine(row)) {
       continue
     }
+    nonEmptyLines++
     const fieldCount = row.length
     frequencies.set(fieldCount, (frequencies.get(fieldCount) || 0) + 1)
   }
-  const mostFrequent = Array.from(frequencies.entries()).sort((a, b) => b[1] - a[1]).slice(0).map(([columns, count]) => ({ columns, count }))[0]
-  return mostFrequent ?? {
+
+  const mostFrequent = Array.from(frequencies.entries()).sort((a, b) => {
+    // Sort by count descending, then by columns descending
+    if (b[1] === a[1]) {
+      return b[0] - a[0]
+    }
+    return b[1] - a[1]
+  }).slice(0, 1).map(([columns, count]) => ({ columns, count }))[0]
+
+  if (mostFrequent && nonEmptyLines > 0) {
+    return {
+      columns: mostFrequent.columns,
+      ratio: mostFrequent.count / nonEmptyLines,
+    }
+  }
+  return {
     columns: 0,
-    count: 0,
+    ratio: 0,
   }
 }
 
@@ -60,8 +78,8 @@ export function isBetterScore(params: {
   if (candidate.columns > best.columns) {
     return true
   }
-  // If tied, select the one with the highest count for that column count
-  if (candidate.columns === best.columns && candidate.count > best.count) {
+  // If tied, select the one with the highest ratio for that column count
+  if (candidate.columns === best.columns && candidate.ratio > best.ratio) {
     return true
   }
   return false

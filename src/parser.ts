@@ -249,8 +249,8 @@ export function* parse(text: string, options: ParseOptions & {
   function getResult(): ParseResult {
     // the row started at lastCursor, ended at cursor
     const string = text.substring(lastCursor, cursor)
-    const byteCount = new TextEncoder().encode(string).length
-    const charCount = string.length + (isFirstRow ? prependedChars : 0)
+    const byteCount = new TextEncoder().encode(string).length - (isFirstRow ? prependedBytes : 0)
+    const charCount = string.length - (isFirstRow ? prependedChars : 0)
     isFirstRow = false
 
     const result = {
