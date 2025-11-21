@@ -166,4 +166,15 @@ describe('parse', () => {
       ['4', '5', '6'],
     ])
   })
+
+  it('should parse correctly with initial BOM when initialState is inQuotes', () => {
+    const text = '\ufeffa\na\na\na",b,c\n1,2,3\n4,5,6'
+    const result = [...parse(text, { initialState: 'inQuotes' })]
+    const data = result.map(({ row }) => row)
+    expect(data).toStrictEqual([
+      ['a\na\na\na', 'b', 'c'],
+      ['1', '2', '3'],
+      ['4', '5', '6'],
+    ])
+  })
 })
