@@ -120,12 +120,48 @@ describe('parse', () => {
     expect((meta[1]?.byteOffset ?? NaN) + (meta[1]?.byteCount ?? NaN)).toBe(new TextEncoder().encode(text).length) // total bytes
   })
 
+  it('should parse correctly when initialState is default', () => {
+    const text = 'a\na\na\na",b,c\n1,2,3\n4,5,6'
+    const result = [...parse(text, { initialState: 'default' })]
+    const data = result.map(({ row }) => row)
+    expect(data).toStrictEqual([
+      ['a'],
+      ['a'],
+      ['a'],
+      ['a"', 'b', 'c'],
+      ['1', '2', '3'],
+      ['4', '5', '6'],
+    ])
+  })
+
+  it('should parse correctly when initialState is default', () => {
+    const text = '"a\na\na\na",b,c\n1,2,3\n4,5,6'
+    const result = [...parse(text, { initialState: 'default' })]
+    const data = result.map(({ row }) => row)
+    expect(data).toStrictEqual([
+      ['a\na\na\na', 'b', 'c'],
+      ['1', '2', '3'],
+      ['4', '5', '6'],
+    ])
+  })
+
   it('should parse correctly when initialState is inQuotes', () => {
-    const text = 'a\na",b,c\n1,2,3\n4,5,6'
+    const text = 'a\na\na\na",b,c\n1,2,3\n4,5,6'
     const result = [...parse(text, { initialState: 'inQuotes' })]
     const data = result.map(({ row }) => row)
     expect(data).toStrictEqual([
-      ['a\na', 'b', 'c'],
+      ['a\na\na\na', 'b', 'c'],
+      ['1', '2', '3'],
+      ['4', '5', '6'],
+    ])
+  })
+
+  it('should parse correctly when initialState is inQuotes', () => {
+    const text = '"a\na\na\na",b,c\n1,2,3\n4,5,6'
+    const result = [...parse(text, { initialState: 'inQuotes' })]
+    const data = result.map(({ row }) => row)
+    expect(data).toStrictEqual([
+      ['"a\na\na\na', 'b', 'c'],
       ['1', '2', '3'],
       ['4', '5', '6'],
     ])
