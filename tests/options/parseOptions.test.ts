@@ -1,6 +1,68 @@
 import { describe, expect, it } from 'vitest'
 
-import { validateAndSetDefaultParseOptions } from '../../src/options/parseOptions'
+import { validateAndGuessParseOptions, validateAndSetDefaultParseOptions } from '../../src/options/parseOptions'
+
+describe('validateAndGuessParseOptions', () => {
+  it('should return valid options when all are provided', () => {
+    const inputOptions = {
+      delimiter: ';',
+      newline: '\r\n' as const,
+      quoteChar: '\'',
+      escapeChar: '\\',
+      comments: '#',
+      initialState: 'inQuotes' as const,
+    }
+    const { parseOptions, error } = validateAndGuessParseOptions(inputOptions, { text: '' })
+    expect(error).toBeUndefined()
+    expect(parseOptions).toEqual(inputOptions)
+  })
+
+  it('should guess missing delimiter', () => {
+    const csvText = 'name;age;city\nAlice;30;New York\nBob;25;Los Angeles'
+    const inputOptions = {
+      newline: '\n' as const,
+      quoteChar: '"',
+      escapeChar: '"',
+      comments: false,
+      initialState: 'default' as const,
+    }
+    const { parseOptions, error } = validateAndGuessParseOptions(inputOptions, { text: csvText })
+    expect(error).toBeUndefined()
+    expect(parseOptions.delimiter).toBe(';')
+  })
+
+  it('should return an error when delimiter cannot be guessed', () => {
+    const csvText = 'name age city\nAlice 30 New York\nBob 25 Los Angeles'
+    const inputOptions = {
+      newline: '\n' as const,
+      quoteChar: '"',
+      escapeChar: '"',
+      comments: false,
+      initialState: 'default' as const,
+    }
+    const { parseOptions, error } = validateAndGuessParseOptions(inputOptions, { text: csvText })
+    expect(error).toBeDefined()
+    expect(error?.type).toBe('Delimiter')
+    expect(parseOptions.delimiter).toBe(',')
+  })
+
+  it.each([
+    { text: '"na\nme","age","city"\n"Alice","30","New York"\n"Bob","25","Los Angeles"', expectedState: 'default' as const },
+    { text: 'na\nme","age","city"\n"Alice","30","New York"\n"Bob","25","Los Angeles"', expectedState: 'inQuotes' as const },
+  ])('should detect initial state: $expectedState', ({ text, expectedState }) => {
+    const inputOptions = {
+      delimiter: ',',
+      newline: '\n' as const,
+      quoteChar: '"',
+      escapeChar: '"',
+      comments: false,
+      initialState: 'detect' as const,
+    }
+    const { parseOptions, error } = validateAndGuessParseOptions(inputOptions, { text })
+    expect(error).toBeUndefined()
+    expect(parseOptions.initialState).toBe(expectedState)
+  })
+})
 
 describe('validateAndSetDefaultParseOptions', () => {
   it('should set default values for missing options', () => {
