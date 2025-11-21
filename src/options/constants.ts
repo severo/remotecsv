@@ -7,4 +7,4 @@ export const BAD_DELIMITERS = ['\r', '\n', '"', BYTE_ORDER_MARK]
 
 export const DefaultDelimiter = ',' // Used if not specified and detection fails
 
-export const defaultPreviewLines = 30
+export const defaultPreviewLines = 10

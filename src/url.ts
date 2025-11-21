@@ -16,6 +16,7 @@ interface FetchOptions {
 }
 interface parseURLOptions extends ParseOptions, FetchOptions {
   delimitersToGuess?: string[]
+  previewLines?: number
   stripBOM?: boolean
 }
 
@@ -35,6 +36,7 @@ interface parseURLOptions extends ParseOptions, FetchOptions {
  * @param options.escapeChar The escape character used in the CSV data. Defaults to the quote character.
  * @param options.comments The comment character or boolean to indicate comments. Defaults to false (don't strip comments).
  * @param options.delimitersToGuess The list of delimiters to guess from
+ * @param options.previewLines The number of lines to preview for guessing. Defaults to 10.
  * @param options.stripBOM Whether to strip the BOM character at the start of the text. Defaults to true.
  * @param options.initialState Initial state for the parser. Use 'detect' to automatically detect the initial state. Defaults to 'default'.
  * @yields Parsed rows along with metadata.
@@ -60,7 +62,7 @@ export async function* parseURL(
     return
   }
 
-  const { delimitersToGuess, stripBOM } = options
+  const { delimitersToGuess, previewLines, stripBOM } = options
   let parseOptions: ParseOptions | undefined = undefined
   let delimiterError: DelimiterError | undefined = undefined
 
@@ -113,7 +115,7 @@ export async function* parseURL(
     chunkByteOffset += invalidByteCount
 
     if (!parseOptions) {
-      const result = validateAndGuessParseOptions(options, { text, delimitersToGuess })
+      const result = validateAndGuessParseOptions(options, { text, delimitersToGuess, previewLines })
       parseOptions = result.parseOptions
       delimiterError = result.error
     }
