@@ -37,5 +37,10 @@ describe('validateAndSetDefaultParseOptions', () => {
     expect(options.quoteChar).toBe('\'')
     expect(options.escapeChar).toBe('\'')
     expect(options.comments).toBe('//')
+    expect(options.initialState).toBe('default')
+  })
+
+  it('throws for invalid options', () => {
+    expect(() => validateAndSetDefaultParseOptions({ initialState: 'detect' })).toThrow()
   })
 })
