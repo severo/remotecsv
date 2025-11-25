@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { type ParseResult, parseURL } from '../src'
+import { type ParseResult, parseText, parseURL } from '../src'
 
 describe('README examples', () => {
   it('parses a remote CSV file', async () => {
@@ -71,5 +71,14 @@ describe('README examples', () => {
       ...results.slice(1, 8).map(r => r.row),
       [''], // When the last row contains a line ending, an extra empty row is produced
     ])
+  })
+
+  it('parses a string', async () => {
+    const csvString = 'A,B,C\nX,Y,Z'
+    const rows = []
+    for (const { row } of parseText(csvString)) {
+      rows.push(row)
+    }
+    expect(rows).toEqual([['A', 'B', 'C'], ['X', 'Y', 'Z']])
   })
 })

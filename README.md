@@ -95,6 +95,22 @@ console.log(rows)
 
 Use the `result.meta.byteOffset` and `result.meta.byteCount` fields to know the exact byte range of each parsed row, and adjust your fetching strategy accordingly. See the [examples](https://severo.github.io/csv-range/examples/) for more details.
 
+### Parse a string
+
+You can also parse a CSV string directly with the `parseString` function:
+
+```typescript
+import { parseText } from 'csv-range'
+const csvString = 'A,B,C\nX,Y,Z'
+const rows = []
+for await (const { row } of parseText(csvString)) {
+    rows.push(row)
+}
+console.log(rows)
+```
+
+Note that `parseText` provide a synchronous iterator, so you don't need to use `await` in the `for` loop.
+
 ## Early version
 
 This is an early version. The API may change completely:
