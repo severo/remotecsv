@@ -37,6 +37,8 @@ jobs:
           node-version: 25
           cache: "npm"
 
+      - run: npm ci
+
       - name: TSDoc Action
         uses: erikyo/tsdoc-action@v1
         with:
