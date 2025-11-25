@@ -9,14 +9,6 @@
 
 Fetch and parse ranges of CSV file.
 
-## Early version
-
-This is an early version. The API may change completely:
-
-- until version 0.1.0, breaking changes may be introduced at any time.
-- from version 0.1.0 to 1.0.0, breaking changes will be introduced only in minor versions.
-- from version 1.0.0, breaking changes will be introduced only in major versions.
-
 ## Install
 
 ```bash
@@ -36,6 +28,14 @@ for await (const { row } of parseURL('https://data.source.coop/severo/csv-papapa
 console.log(rows)
 // Output: [ [ 'A', 'B', 'C' ], [ 'X', 'Y', 'Z' ] ]
 ```
+
+## Early version
+
+This is an early version. The API may change completely:
+
+- until version 0.1.0, breaking changes may be introduced at any time.
+- from version 0.1.0 to 1.0.0, breaking changes will be introduced only in minor versions.
+- from version 1.0.0, breaking changes will be introduced only in major versions.
 
 ## Thanks
 

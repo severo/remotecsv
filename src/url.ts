@@ -6,7 +6,7 @@ import { parse } from './parser'
 import type { DelimiterError, ParseOptions, ParseResult } from './types'
 import { decode, isEmptyBlobURL } from './utils'
 
-interface FetchOptions {
+export interface FetchOptions {
   chunkSize?: number
   firstByte?: number
   lastByte?: number
@@ -14,7 +14,7 @@ interface FetchOptions {
   fetchChunk?: typeof fetchChunk
   parse?: typeof parse
 }
-interface parseURLOptions extends ParseOptions, FetchOptions {
+export interface ParseURLOptions extends ParseOptions, FetchOptions {
   delimitersToGuess?: string[]
   previewLines?: number
   stripBOM?: boolean
@@ -44,7 +44,7 @@ interface parseURLOptions extends ParseOptions, FetchOptions {
  */
 export async function* parseURL(
   url: string,
-  options: parseURLOptions = {},
+  options: ParseURLOptions = {},
 ): AsyncGenerator<ParseResult, void, unknown> {
   const chunkSize = checkIntegerGreaterOrEqualThan(options.chunkSize, 1) ?? defaultChunkSize
   let firstByte = checkIntegerGreaterOrEqualThan(options.firstByte, 0) ?? 0
