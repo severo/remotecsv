@@ -17,17 +17,83 @@ npm install csv-range
 
 ## Usage
 
-To parse a remote CSV file from a URL:
+Parse a remote CSV file from a URL:
 
 ```typescript
 import { parseURL } from 'csv-range'
+const url = 'https://data.source.coop/severo/csv-papaparse-test-files/sample.csv'
 const rows = []
-for await (const { row } of parseURL('https://data.source.coop/severo/csv-papaparse-test-files/sample.csv')) {
+for await (const { row } of parseURL(url)) {
     rows.push(row)
 }
 console.log(rows)
 // Output: [ [ 'A', 'B', 'C' ], [ 'X', 'Y', 'Z' ] ]
 ```
+
+### Output format
+
+The `parseURL` function yields an object for each row with the following properties:
+- `row`: array of strings with the values of the row.
+- `errors`: array of parsing errors found in the row.
+- `meta`: object with metadata about the parsing process.
+
+The format is described on the doc pages: https://severo.github.io/csv-range/interfaces/ParseResult.html.
+
+The `row` field might contain fewer or more columns than expected, depending on the CSV content. It can be an empty array for empty rows. It's up to the user to handle these cases. The library does not trim whitespace from values, and it does not convert types.
+
+The `errors` field contains any parsing errors found in the row. It's an array of error messages, which can be useful for debugging. See the possible errors in the doc pages: https://severo.github.io/csv-range/interfaces/ParseError.html.
+
+The `meta` field provides the `delimiter` and `newline` strings, detected automatically, or specified by the user. It also gives the number of characters of the line (as counted by JavaScript) and the corresponding number of bytes in the original CSV file (which may differ due to multi-byte characters) and byte offset in the file. These counts include the newline characters.
+
+### Options
+
+The `parseURL` function accepts an optional second argument with options.
+
+It can contain options for fetching the CSV file: https://severo.github.io/csv-range/interfaces/FetchOptions.html, for guessing the delimiter and newline characters: https://severo.github.io/csv-range/interfaces/GuessOptions.html, and for parsing the CSV content: https://severo.github.io/csv-range/interfaces/ParseOptions.html.
+
+
+## Examples
+
+Find some examples of usage below. You can also find them in the [examples](https://severo.github.io/csv-range/examples/) directory, and run them with `npm run examples`.
+
+### Only the first 10 rows
+
+As the library uses async iterators, it's easy to stop parsing after a certain number of rows:
+
+```typescript
+import { parseURL } from 'csv-range'
+const url = 'https://data.source.coop/severo/csv-papaparse-test-files/verylong-sample.csv'
+const rows = []
+let count = 0
+for await (const { row } of parseURL(url)) {
+    rows.push(row)
+    count++
+    if (count >= 10) {
+        break
+    }
+}
+console.log(rows)
+```
+
+### Fetch a specific byte range
+
+You can fetch only a specific byte range of the CSV file, to parse only a part of it. This is useful for large files.
+
+```typescript
+import { parseURL } from 'csv-range'
+const url = 'https://data.source.coop/severo/csv-papaparse-test-files/verylong-sample.csv'
+const fetchOptions = {
+    firstByte: 30_000,
+    lastByte: 30_200
+}
+const rows = []
+for await (const { row } of parseURL(url, { fetch: fetchOptions })) {
+    rows.push(row)
+}
+console.log(rows)
+```
+
+Use the `result.meta.byteOffset` and `result.meta.byteCount` fields to know the exact byte range of each parsed row, and adjust your fetching strategy accordingly. See the [examples](https://severo.github.io/csv-range/examples/) for more details.
 
 ## Early version
 
@@ -36,6 +102,10 @@ This is an early version. The API may change completely:
 - until version 0.1.0, breaking changes may be introduced at any time.
 - from version 0.1.0 to 1.0.0, breaking changes will be introduced only in minor versions.
 - from version 1.0.0, breaking changes will be introduced only in major versions.
+
+## Used by
+
+This library is used by [source.coop](https://source.coop/severo/csv-papaparse-test-files/verylong-sample.csv) to preview the CSV files. More info in [csv-table](https://github.com/source-cooperative/csv-table/), which fetches ranges of the remote CSV to display the rows that are visible in the table. It also caches the fetched ranges to avoid re-fetching them when scrolling.
 
 ## Thanks
 
