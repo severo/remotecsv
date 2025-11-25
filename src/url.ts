@@ -3,60 +3,19 @@ import { checkIntegerGreaterOrEqualThan } from './options/check'
 import { defaultChunkSize } from './options/constants'
 import { validateAndGuessParseOptions } from './options/parseOptions'
 import { parse } from './parser'
-import type { DelimiterError, ParseOptions, ParseResult } from './types'
+import type { DelimiterError, FetchOptions, GuessOptions, ParseOptions, ParseResult } from './types'
 import { decode, isEmptyBlobURL } from './utils'
-
-/** Options for fetching chunks of a remote file */
-export interface FetchOptions {
-  /** The size of each chunk to fetch. It must be a strictly positive integer. Default is 1MB. */
-  chunkSize?: number
-  /** The byte where fetching starts. It must be a non-negative integer. Default is 0. */
-  firstByte?: number
-  /** The last byte fetched (inclusive). It must be a non-negative integer. Default is the end of the file. */
-  lastByte?: number
-  /** Optional fetch request initialization parameters. */
-  requestInit?: RequestInit
-  /** Optional custom fetchChunk function for fetching chunks. */
-  fetchChunk?: typeof fetchChunk
-  /** Optional custom parse function for parsing a string. */
-  parse?: typeof parse
-}
-
-/** Options for parsing a remote CSV file */
-export interface ParseURLOptions extends ParseOptions, FetchOptions {
-  /** The list of delimiters to guess from. If not provided, the parser will attempt to guess it. */
-  delimitersToGuess?: string[]
-  /** The number of lines to preview for guessing. Defaults to 10. */
-  previewLines?: number
-  /** Whether to strip the BOM character at the start of the text. Defaults to true. */
-  stripBOM?: boolean
-}
 
 /**
  * Parses a remote text file in chunks using HTTP range requests.
  * @param url The URL of the remote text file.
- * @param options Options for parsing.
- * @param options.chunkSize The size of each chunk to fetch. It must be a strictly positive integer. Default is 1MB.
- * @param options.firstByte The byte where parsing starts. It must be a non-negative integer. Default is 0.
- * @param options.lastByte The last byte parsed (inclusive). It must be a non-negative integer. Default is the end of the file.
- * @param options.requestInit Optional fetch request initialization parameters.
- * @param options.fetchChunk Optional custom fetchChunk function for fetching chunks.
- * @param options.parse Optional custom parse function for parsing a string.
- * @param options.delimiter The delimiter used in the CSV data. Defaults to guess the delimiter, else ','.
- * @param options.newline The newline used in the CSV data. Defaults to guess the newline, else '\n'.
- * @param options.quoteChar The quote character used in the CSV data. Defaults to '"'.
- * @param options.escapeChar The escape character used in the CSV data. Defaults to the quote character.
- * @param options.comments The comment character or boolean to indicate comments. Defaults to false (don't strip comments).
- * @param options.delimitersToGuess The list of delimiters to guess from
- * @param options.previewLines The number of lines to preview for guessing. Defaults to 10.
- * @param options.stripBOM Whether to strip the BOM character at the start of the text. Defaults to true.
- * @param options.initialState Initial state for the parser. Use 'detect' to automatically detect the initial state. Defaults to 'default'.
- * @yields Parsed rows along with metadata.
+ * @param options Options for fetching and parsing the remote text file.
+ * @yields {ParseResult} Parsed rows along with metadata.
  * @returns An async generator that yields parsed rows.
  */
 export async function* parseURL(
   url: string,
-  options: ParseURLOptions = {},
+  options: ParseOptions & FetchOptions & GuessOptions = {},
 ): AsyncGenerator<ParseResult, void, unknown> {
   const chunkSize = checkIntegerGreaterOrEqualThan(options.chunkSize, 1) ?? defaultChunkSize
   let firstByte = checkIntegerGreaterOrEqualThan(options.firstByte, 0) ?? 0

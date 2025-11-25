@@ -15,12 +15,6 @@ interface OptionsResult {
 /**
  * Validates and guesses parsing options.
  * @param parseOptions The parsing options to validate and guess.
- * @param parseOptions.delimiter The delimiter used in the CSV data. Defaults to ','.
- * @param parseOptions.newline The newline used in the CSV data. Defaults to '\n'.
- * @param parseOptions.quoteChar The quote character used in the CSV data. Defaults to '"'.
- * @param parseOptions.escapeChar The escape character used in the CSV data. Defaults to the quote character.
- * @param parseOptions.comments The comment character or boolean to indicate comments.
- * @param parseOptions.initialState The initial state for the parser. Use 'detect' to automatically detect the initial state. Defaults to 'default'.
  * @param params The parameters for validation and guessing.
  * @param params.text The string to use for guessing.
  * @param params.delimitersToGuess The list of delimiters to guess from.
@@ -78,8 +72,11 @@ export function validateAndGuessParseOptions(parseOptions: ParseOptions, { text,
       delimiter = DefaultDelimiter
     }
   }
+
+  const stripBOM = parseOptions.stripBOM
+
   return {
-    parseOptions: { delimiter, newline, quoteChar, escapeChar, comments, initialState },
+    parseOptions: { delimiter, newline, quoteChar, escapeChar, comments, initialState, stripBOM },
     error,
   }
 }
@@ -91,17 +88,12 @@ export interface ValidParseOptions {
   quoteChar: string
   escapeChar: string
   initialState: State
+  stripBOM: boolean
 }
 
 /**
  * Validates and fills in default options
  * @param parseOptions The parsing options to validate and guess.
- * @param parseOptions.delimiter The delimiter used in the CSV data. Defaults to ','.
- * @param parseOptions.newline The newline used in the CSV data. Defaults to '\n'.
- * @param parseOptions.quoteChar The quote character used in the CSV data. Defaults to '"'.
- * @param parseOptions.escapeChar The escape character used in the CSV data. Defaults to the quote character.
- * @param parseOptions.comments The comment character or boolean to indicate comments.
- * @param parseOptions.initialState The initial state for the parser. 'detect' is not accepted here. Defaults to 'default'.
  * @returns The validated options
  */
 export function validateAndSetDefaultParseOptions(parseOptions?: ParseOptions): ValidParseOptions {
@@ -125,6 +117,8 @@ export function validateAndSetDefaultParseOptions(parseOptions?: ParseOptions): 
     throw new Error('Initial state \'detect\' is not allowed.')
   }
 
+  const stripBOM = parseOptions?.stripBOM ?? true
+
   return {
     delimiter,
     newline,
@@ -132,5 +126,6 @@ export function validateAndSetDefaultParseOptions(parseOptions?: ParseOptions): 
     quoteChar,
     escapeChar,
     initialState,
+    stripBOM,
   }
 }

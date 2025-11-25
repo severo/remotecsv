@@ -30,9 +30,9 @@ export function* parse(text: string, options: ParseOptions & {
     quoteChar,
     escapeChar,
     initialState,
+    stripBOM,
   } = validateAndSetDefaultParseOptions(options)
   const ignoreLastRow = options?.ignoreLastRow ?? false
-  const stripBOM = options?.stripBOM ?? true
 
   // If initialState is 'inQuotes', we need to prepend a quote to the text
   let prependedBytes = 0

@@ -26,6 +26,40 @@ export interface ParseOptions {
   comments?: boolean | string
   /** The initial state for the parser. Use 'detect' to automatically detect the initial state. Defaults to 'default'. */
   initialState?: State | 'detect'
+  /** Whether to strip the BOM character at the start of the text. Defaults to true. */
+  stripBOM?: boolean
+}
+
+/** Options for fetching chunks of a remote file */
+export interface FetchOptions {
+  /** The size of each chunk to fetch. It must be a strictly positive integer. Default is 1MB. */
+  chunkSize?: number
+  /** The byte where fetching starts. It must be a non-negative integer. Default is 0. */
+  firstByte?: number
+  /** The last byte fetched (inclusive). It must be a non-negative integer. Default is the end of the file. */
+  lastByte?: number
+  /** Optional fetch request initialization parameters. */
+  requestInit?: RequestInit
+  /** Optional custom fetchChunk function for fetching chunks. */
+  fetchChunk?: typeof fetchChunk
+  /** Optional custom parse function for parsing a string. */
+  parse?: typeof parse
+}
+
+/** Options for guessing CSV format */
+export interface GuessOptions {
+  /** The list of delimiters to guess from. If not provided, the parser will attempt to guess it. */
+  delimitersToGuess?: string[]
+  /** The number of lines to preview for guessing. Defaults to 10. */
+  previewLines?: number
+}
+
+/** Represents a chunk of bytes fetched from a remote file. */
+export interface ByteChunk {
+  /** The bytes fetched from the remote file. */
+  bytes: Uint8Array
+  /** The total file size of the remote file. */
+  fileSize: number
 }
 
 /** Error structure for delimiter detection */

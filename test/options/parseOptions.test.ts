@@ -11,6 +11,7 @@ describe('validateAndGuessParseOptions', () => {
       escapeChar: '\\',
       comments: '#',
       initialState: 'inQuotes' as const,
+      stripBOM: false,
     }
     const { parseOptions, error } = validateAndGuessParseOptions(inputOptions, { text: '' })
     expect(error).toBeUndefined()
@@ -82,6 +83,7 @@ describe('validateAndSetDefaultParseOptions', () => {
       escapeChar: '\\',
       comments: '#',
       initialState: 'inQuotes' as const,
+      stripBOM: false,
     }
     const options = validateAndSetDefaultParseOptions(inputOptions)
     expect(options).toEqual(inputOptions)
