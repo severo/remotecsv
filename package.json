@@ -25,6 +25,7 @@
   },
   "scripts": {
     "build": "tsdown --tsconfig=tsconfig.build.json",
+    "build:docs": "typedoc",
     "coverage": "vitest run --coverage --project=node",
     "dev": "tsdown --tsconfig=tsconfig.build.json --watch",
     "examples": "vitest run --project=examples",
