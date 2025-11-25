@@ -30,6 +30,7 @@ export default defineConfig([
       'simple-import-sort/exports': 'error',
       'jsdoc/require-yields-type': 'off',
       'jsdoc/require-param-type': 'off',
+      'jsdoc/require-property-type': 'off',
       'jsdoc/require-returns-type': 'off',
     },
   },

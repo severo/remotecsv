@@ -28,14 +28,16 @@
     "coverage": "vitest run --coverage --project=node",
     "dev": "tsdown --tsconfig=tsconfig.build.json --watch",
     "examples": "vitest run --project=examples",
-    "lint": "eslint .",
+    "lint": "npm run lint:docs && npm run lint:eslint && npm run lint:types",
+    "lint:docs": "typedoc --validation",
+    "lint:eslint": "eslint .",
+    "lint:types": "tsc --noEmit",
     "prepublishOnly": "npm i && npm run build",
     "test:browser": "vitest run --project=browser",
     "test:node": "vitest run --project=node",
     "test:ui": "vitest --coverage --project=node --ui",
     "test:watch": "vitest",
-    "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "test": "npm run test:node && npm run test:browser"
   },
   "devDependencies": {
     "@eslint/compat": "2.0.0",

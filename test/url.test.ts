@@ -2,7 +2,7 @@ import { describe, expect, inject, it } from 'vitest'
 
 import type { ParseResult } from '../src/types'
 import { parseURL } from '../src/url'
-import { toURL } from '../src/utils'
+import { toBlobURL } from '../src/utils'
 import { PARSE_TESTS } from './cases'
 
 function* parseMock(text: string): Generator<ParseResult, void, unknown> {
@@ -28,7 +28,7 @@ describe.each(inject('withNodeWorkaround'))('using withNodeWorkaround: %s', (wit
       const text = 'hello, csvremote!!!' // length: 19
 
       // passing 'to: fileSize - 1' for Node.js bug: https://github.com/nodejs/node/issues/60382
-      const { url, fileSize, revoke } = toURL(text, { withNodeWorkaround })
+      const { url, fileSize, revoke } = toBlobURL(text, { withNodeWorkaround })
       const lastByte = withNodeWorkaround ? fileSize - 1 : undefined
 
       let result = ''
@@ -46,7 +46,7 @@ describe.each(inject('withNodeWorkaround'))('using withNodeWorkaround: %s', (wit
     it.each([0, -1, 1.5, NaN, Infinity])('throws if chunkSize is invalid: %s', async (chunkSize) => {
       const text = 'hello, csvremote!!!'
 
-      const { url, fileSize, revoke } = toURL(text, { withNodeWorkaround })
+      const { url, fileSize, revoke } = toBlobURL(text, { withNodeWorkaround })
       const lastByte = withNodeWorkaround ? fileSize - 1 : undefined
 
       const iterator = parseURL(url, { chunkSize, lastByte })
@@ -64,7 +64,7 @@ describe.each(inject('withNodeWorkaround'))('using withNodeWorkaround: %s', (wit
       [5, 5, ','],
     ])('accepts valid firstByte: %s and lastByte: %s', async (firstByte, lastByte, expected) => {
       const text = 'hello, csvremote!!!'
-      const { url, revoke } = toURL(text, { withNodeWorkaround })
+      const { url, revoke } = toBlobURL(text, { withNodeWorkaround })
       let result = ''
       // implicit assertation in the loop: no exceptions thrown
       for await (const { row } of parseURL(url, { firstByte, lastByte, parse: parseMock })) {
@@ -84,7 +84,7 @@ describe.each(inject('withNodeWorkaround'))('using withNodeWorkaround: %s', (wit
       [1, -1],
     ])('accepts firstByte: %s greater than lastByte: %s, and return without any iterations', async (firstByte, lastByte) => {
       const text = 'hello, csvremote!!!'
-      const { url, revoke } = toURL(text, { withNodeWorkaround })
+      const { url, revoke } = toBlobURL(text, { withNodeWorkaround })
       let result = ''
       // implicit assertation in the loop: no exceptions thrown
       for await (const { row } of parseURL(url, { firstByte, lastByte, parse: parseMock })) {
@@ -105,7 +105,7 @@ describe.each(inject('withNodeWorkaround'))('using withNodeWorkaround: %s', (wit
       // [5, 0], // now allowed
     ])('throws for invalid from: %s or lastByte: %s', async (firstByte, lastByte) => {
       const text = 'hello, csvremote!!!'
-      const { url, revoke } = toURL(text, { withNodeWorkaround })
+      const { url, revoke } = toBlobURL(text, { withNodeWorkaround })
       const iterator = parseURL(url, { chunkSize: 10, firstByte, lastByte })
       await expect(iterator.next()).rejects.toThrow()
       revoke()
@@ -113,7 +113,7 @@ describe.each(inject('withNodeWorkaround'))('using withNodeWorkaround: %s', (wit
 
     it('uses the requestInit option, allowing to pass an abort signal', async () => {
       const text = 'hello, csvremote!!!'
-      const { url, revoke } = toURL(text, { withNodeWorkaround })
+      const { url, revoke } = toBlobURL(text, { withNodeWorkaround })
       const controller = new AbortController()
       const iterator = parseURL(url, { requestInit: { signal: controller.signal } })
       controller.abort()
@@ -123,7 +123,7 @@ describe.each(inject('withNodeWorkaround'))('using withNodeWorkaround: %s', (wit
 
     it('throws if parse yields more bytes than provided', async () => {
       const text = 'hello, csvremote!!!'
-      const { url, revoke } = toURL(text, { withNodeWorkaround })
+      const { url, revoke } = toBlobURL(text, { withNodeWorkaround })
       function* parseMock(text: string) {
         // yield more bytes than provided
         yield {
@@ -153,7 +153,7 @@ describe.each(inject('withNodeWorkaround'))('using withNodeWorkaround: %s', (wit
       it(test.description, async () => {
         const config: Parameters<typeof parseURL>[1] = test.config || {}
 
-        const { url, fileSize, revoke } = toURL(test.text, { withNodeWorkaround })
+        const { url, fileSize, revoke } = toBlobURL(test.text, { withNodeWorkaround })
         const lastByte = withNodeWorkaround ? fileSize - 1 : undefined
 
         const result = []
@@ -198,7 +198,7 @@ describe.each(inject('withNodeWorkaround'))('using withNodeWorkaround: %s', (wit
     it.each([1, 2, 3, 5, 9, 14])('with known delimiter and newline, accepts chunk size of %s bytes.', async (chunkSize) => {
       const text = 'a,b,c\n1,2,3\n4,5,6\n7,8,9\na,b,c\n1,2,3\n4,5,6\n7,8,9\na,b,c\n1,2,3\n4,5,6\n7,8,9\n'
 
-      const { url, fileSize, revoke } = toURL(text, { withNodeWorkaround })
+      const { url, fileSize, revoke } = toBlobURL(text, { withNodeWorkaround })
       const lastByte = withNodeWorkaround ? fileSize - 1 : undefined
 
       const result = []
@@ -216,7 +216,7 @@ describe.each(inject('withNodeWorkaround'))('using withNodeWorkaround: %s', (wit
     it.each([undefined, true, false])('should respect the stripBOM option (%s), and count the bytes correctly', async (stripBOM) => {
       const text = '\ufeffhello, csvremote!!!'
 
-      const { url, fileSize, revoke } = toURL(text, { withNodeWorkaround })
+      const { url, fileSize, revoke } = toBlobURL(text, { withNodeWorkaround })
       const lastByte = withNodeWorkaround ? fileSize - 1 : undefined
 
       const result = []
@@ -248,7 +248,7 @@ describe.each(inject('withNodeWorkaround'))('using withNodeWorkaround: %s', (wit
       // 👉🏿 uses 8 bytes in UTF-8.
       const text = '👉🏿,1'
 
-      const { url, fileSize, revoke } = toURL(text, { withNodeWorkaround })
+      const { url, fileSize, revoke } = toBlobURL(text, { withNodeWorkaround })
       lastByte ??= withNodeWorkaround ? fileSize - 1 : undefined
       const lastByteAdjusted = lastByte !== undefined ? lastByte : fileSize - 1
 
@@ -283,7 +283,7 @@ describe.each(inject('withNodeWorkaround'))('using withNodeWorkaround: %s', (wit
     it('should search invalid bytes over multiple chunks if needed', async () => {
       const text = '👉,1'
 
-      const { url, fileSize, revoke } = toURL(text, { withNodeWorkaround })
+      const { url, fileSize, revoke } = toBlobURL(text, { withNodeWorkaround })
       const lastByte = withNodeWorkaround ? fileSize - 1 : undefined
 
       const result = []
@@ -314,7 +314,7 @@ describe.each(inject('withNodeWorkaround'))('using withNodeWorkaround: %s', (wit
     it('should report invalid data in multiple rows', async () => {
       const text = '👉a,b\n1,2'
 
-      const { url, fileSize, revoke } = toURL(text, { withNodeWorkaround })
+      const { url, fileSize, revoke } = toBlobURL(text, { withNodeWorkaround })
       const lastByte = withNodeWorkaround ? fileSize - 1 : undefined
 
       const result = []
@@ -356,7 +356,7 @@ describe.each(inject('withNodeWorkaround'))('using withNodeWorkaround: %s', (wit
     it('should handle empty Blob URLs', async () => {
       const text = ''
 
-      const { url, fileSize, revoke } = toURL(text, { withNodeWorkaround })
+      const { url, fileSize, revoke } = toBlobURL(text, { withNodeWorkaround })
       const lastByte = withNodeWorkaround ? fileSize - 1 : undefined
 
       const result = []
@@ -370,7 +370,7 @@ describe.each(inject('withNodeWorkaround'))('using withNodeWorkaround: %s', (wit
 
     it('should return without any iteration if firstByte > lastByte', async () => {
       const text = 'a,b,c\n1,2,3'
-      const { url, revoke } = toURL(text, { withNodeWorkaround })
+      const { url, revoke } = toBlobURL(text, { withNodeWorkaround })
       const result = []
       for await (const r of parseURL(url, { firstByte: 10, lastByte: 5 })) {
         result.push(r)

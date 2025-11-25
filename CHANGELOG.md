@@ -15,7 +15,7 @@
 
 ## [0.0.7]
 
-- export toURL utility function
+- export toBlobURL utility function
 
 ## [0.0.6]
 
