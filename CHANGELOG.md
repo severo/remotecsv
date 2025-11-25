@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [0.1.0]
+
+- export more types
+- add example tests, docs and improve README
+
 ## [0.0.10]
 
 - add previewLines option to delimiter and initial state detection

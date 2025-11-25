@@ -41,7 +41,7 @@ The format is described on the doc pages: https://severo.github.io/csv-range/int
 
 The `row` field might contain fewer or more columns than expected, depending on the CSV content. It can be an empty array for empty rows. It's up to the user to handle these cases. The library does not trim whitespace from values, and it does not convert types.
 
-The `errors` field contains any parsing errors found in the row. It's an array of error messages, which can be useful for debugging. See the possible errors in the doc pages: https://severo.github.io/csv-range/interfaces/ParseError.html.
+The `errors` field contains any parsing errors found in the row. It's an array of error messages, which can be useful for debugging.
 
 The `meta` field provides the `delimiter` and `newline` strings, detected automatically, or specified by the user. It also gives the number of characters of the line (as counted by JavaScript) and the corresponding number of bytes in the original CSV file (which may differ due to multi-byte characters) and byte offset in the file. These counts include the newline characters.
 
@@ -49,12 +49,12 @@ The `meta` field provides the `delimiter` and `newline` strings, detected automa
 
 The `parseURL` function accepts an optional second argument with options.
 
-It can contain options for fetching the CSV file: https://severo.github.io/csv-range/interfaces/FetchOptions.html, for guessing the delimiter and newline characters: https://severo.github.io/csv-range/interfaces/GuessOptions.html, and for parsing the CSV content: https://severo.github.io/csv-range/interfaces/ParseOptions.html.
+It can contain options for [fetching](https://severo.github.io/csv-range/interfaces/FetchOptions.html) the CSV file, for [guessing](https://severo.github.io/csv-range/interfaces/GuessOptions.html) the delimiter and newline characters, and for [parsing](https://severo.github.io/csv-range/interfaces/ParseOptions.html) the CSV content.
 
 
 ## Examples
 
-Find some examples of usage below. You can also find them in the [examples](https://severo.github.io/csv-range/examples/) directory, and run them with `npm run examples`.
+Find some examples of usage below. You can also find them in the [examples](https://github.com/severo/csv-range/tree/main/examples/) directory, and run them with `npm run examples`.
 
 ### Only the first 10 rows
 
@@ -93,7 +93,7 @@ for await (const { row } of parseURL(url, { fetch: fetchOptions })) {
 console.log(rows)
 ```
 
-Use the `result.meta.byteOffset` and `result.meta.byteCount` fields to know the exact byte range of each parsed row, and adjust your fetching strategy accordingly. See the [examples](https://severo.github.io/csv-range/examples/) for more details.
+Use the `result.meta.byteOffset` and `result.meta.byteCount` fields to know the exact byte range of each parsed row, and adjust your fetching strategy accordingly. See the [examples](https://github.com/severo/csv-range/tree/main/examples/) for an in-depth look.
 
 ### Parse a string
 
@@ -113,10 +113,9 @@ Note that `parseText` provide a synchronous iterator, so you don't need to use `
 
 ## Early version
 
-This is an early version. The API may change completely:
+This is an early version:
 
-- until version 0.1.0, breaking changes may be introduced at any time.
-- from version 0.1.0 to 1.0.0, breaking changes will be introduced only in minor versions.
+- until 1.0.0, breaking changes will be introduced only in minor versions.
 - from version 1.0.0, breaking changes will be introduced only in major versions.
 
 ## Used by
