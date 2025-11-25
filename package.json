@@ -1,7 +1,17 @@
 {
   "name": "csv-range",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Parse ranges of a CSV file.",
+  "keywords": [
+    "csv",
+    "fetch",
+    "remote",
+    "range",
+    "http",
+    "papaparse",
+    "parse",
+    "iterator"
+  ],
   "type": "module",
   "license": "MIT",
   "homepage": "https://github.com/severo/csv-range#readme",

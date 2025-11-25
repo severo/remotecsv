@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.1.1]
+
+- add keywords to package.json
+
 ## [0.1.0]
 
 - export more types
