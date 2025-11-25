@@ -18,6 +18,7 @@ export default defineConfig({
           provide: {
             withNodeWorkaround: [true],
           },
+          include: ['test/**/*.test.ts'],
         },
       },
       {
@@ -41,6 +42,18 @@ export default defineConfig({
           provide: {
             withNodeWorkaround: [true, false, undefined],
           },
+          include: ['test/**/*.test.ts'],
+        },
+      },
+      {
+        test: {
+          name: 'examples',
+          environment: 'node',
+          globals: true,
+          provide: {
+            withNodeWorkaround: [true],
+          },
+          include: ['examples/**/*.test.ts'],
         },
       },
     ],

@@ -34,7 +34,7 @@ export default defineConfig([
     },
   },
   {
-    files: ['tests/*.ts'],
+    files: ['examples/**/*.ts', 'test/**/*.ts'],
     rules: {
       'jsdoc/require-jsdoc': 'off',
     },

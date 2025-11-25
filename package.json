@@ -27,6 +27,7 @@
     "build": "tsdown --tsconfig=tsconfig.build.json",
     "coverage": "vitest run --coverage --project=node",
     "dev": "tsdown --tsconfig=tsconfig.build.json --watch",
+    "examples": "vitest run --project=examples",
     "lint": "eslint .",
     "prepublishOnly": "npm i && npm run build",
     "test:browser": "vitest run --project=browser",
