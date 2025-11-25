@@ -1,3 +1,11 @@
+/** Represents a chunk of bytes fetched from a remote file. */
+export interface ByteChunk {
+  /** The bytes fetched from the remote file. */
+  bytes: Uint8Array
+  /** The total file size of the remote file. */
+  fileSize: number
+}
+
 /**
  * Fetches a chunk of a remote file.
  *
@@ -15,7 +23,7 @@
  * const result = fetchChunk({ url, chunkSize, firstByte, maxLastByte: fileSize - 1 })
  * ```
  *
- * See `toURL` in `src/url.ts` for a helper function that creates such URLs.
+ * See `toBlobURL` in `src/url.ts` for a helper function that creates such URLs.
  * @param options Options for fetching the chunk.
  * @param options.url The URL of the remote file.
  * @param options.chunkSize The size of the chunk to fetch.
@@ -36,7 +44,7 @@ export async function fetchChunk({
   firstByte: number
   maxLastByte?: number
   requestInit?: RequestInit
-}) {
+}): Promise<ByteChunk> {
   const extraByte = 1
   const chunkLastByte = firstByte + chunkSize - 1 + extraByte
   const { bytes: allBytes, fileSize } = await fetchRange({ url, firstByte, lastByte: chunkLastByte, requestInit })
@@ -66,10 +74,7 @@ export async function fetchRange({
   firstByte: number
   lastByte: number
   requestInit?: RequestInit
-}): Promise<{
-  bytes: Uint8Array
-  fileSize: number
-}> {
+}): Promise<ByteChunk> {
   const mergedRequestInit: RequestInit = {
     ...requestInit,
     headers: {

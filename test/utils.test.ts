@@ -1,12 +1,12 @@
 import { describe, expect, inject, it } from 'vitest'
 
-import { decode, escapeRegExp, isEmptyBlobURL, isEmptyLine, toURL } from '../src/utils'
+import { decode, escapeRegExp, isEmptyBlobURL, isEmptyLine, toBlobURL } from '../src/utils'
 
 describe.each(inject('withNodeWorkaround'))('using withNodeWorkaround: %s', (withNodeWorkaround) => {
-  describe('toURL', () => {
+  describe('toBlobURL', () => {
     it.each([undefined, true, false])('creates a valid blob URL and revokes it', async (withNodeWorkaround) => {
       const text = 'Hello, world!'
-      const { url, revoke } = toURL(text, { withNodeWorkaround })
+      const { url, revoke } = toBlobURL(text, { withNodeWorkaround })
       expect(url).toMatch(/^blob:/)
       // After revocation, fetching the URL should fail
       revoke()
@@ -14,7 +14,7 @@ describe.each(inject('withNodeWorkaround'))('using withNodeWorkaround: %s', (wit
     })
     it.skipIf(withNodeWorkaround !== true)('includes an extra space to fix Node.js issue and returns correct file size', async () => {
       const text = 'Sample text in ASCII (1 char = 1 byte)'
-      const { url, fileSize } = toURL(text, { withNodeWorkaround: true })
+      const { url, fileSize } = toBlobURL(text, { withNodeWorkaround: true })
       expect(fileSize).toBe(text.length)
 
       // Fetch the blob URL to verify its content
@@ -33,14 +33,14 @@ describe.each(inject('withNodeWorkaround'))('using withNodeWorkaround: %s', (wit
     })
     it('correctly calculates file size for multi-byte characters', async () => {
       const text = 'こんにちは' // "Hello" in Japanese, 5 characters but more than 5 bytes
-      const { fileSize } = toURL(text, { withNodeWorkaround })
+      const { fileSize } = toBlobURL(text, { withNodeWorkaround })
       const encoder = new TextEncoder()
       const encoded = encoder.encode(text)
       expect(fileSize).toBe(encoded.length)
     })
     it('allows an empty string', async () => {
       const text = ''
-      const { url, fileSize } = toURL(text, { withNodeWorkaround })
+      const { url, fileSize } = toBlobURL(text, { withNodeWorkaround })
       expect(fileSize).toBe(0)
 
       const response = await fetch(url)
@@ -52,7 +52,7 @@ describe.each(inject('withNodeWorkaround'))('using withNodeWorkaround: %s', (wit
     })
     it.skipIf(withNodeWorkaround === true)('throws when doing a range request on empty Blob URL, with browser, without withNodeWorkaround', async () => {
       const text = ''
-      const { url, fileSize } = toURL(text, { withNodeWorkaround })
+      const { url, fileSize } = toBlobURL(text, { withNodeWorkaround })
       expect(fileSize).toBe(0)
 
       await expect(async () => {

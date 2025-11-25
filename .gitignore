@@ -5,3 +5,5 @@ dist
 
 # Vitest
 /coverage/
+
+/docs/

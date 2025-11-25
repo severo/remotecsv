@@ -1,16 +1,34 @@
+/**
+ * Allowed newlines
+ */
 export type Newline = '\n' | '\r' | '\r\n'
 
+/**
+ * Parser state
+ * 'default' - outside quotes
+ * 'inQuotes' - inside quotes
+ */
 export type State = 'default' | 'inQuotes'
 
+/**
+ * Options for parsing CSV data
+ */
 export interface ParseOptions {
+  /** The delimiter used in the CSV data. If not provided, the parser will attempt to guess it. */
   delimiter?: string
+  /** The newline character(s) used in the CSV data. Defaults to '\n'. */
   newline?: Newline
+  /** The quote character used in the CSV data. Defaults to '"'. */
   quoteChar?: string
+  /** The escape character used in the CSV data. Defaults to the quote character. */
   escapeChar?: string
+  /** The comment character or boolean to indicate comments. Defaults to false (don't strip comments). */
   comments?: boolean | string
+  /** The initial state for the parser. Use 'detect' to automatically detect the initial state. Defaults to 'default'. */
   initialState?: State | 'detect'
 }
 
+/** Error structure for delimiter detection */
 export interface DelimiterError {
   type: 'Delimiter'
   code: 'UndetectableDelimiter'
@@ -33,6 +51,9 @@ export interface ParseError {
   message: string
 }
 
+/**
+ * Metadata about the parsed row
+ */
 export interface ParseMeta {
   /** Delimiter used */
   delimiter: string

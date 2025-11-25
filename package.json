@@ -27,14 +27,17 @@
     "build": "tsdown --tsconfig=tsconfig.build.json",
     "coverage": "vitest run --coverage --project=node",
     "dev": "tsdown --tsconfig=tsconfig.build.json --watch",
-    "lint": "eslint .",
+    "examples": "vitest run --project=examples",
+    "lint": "npm run lint:docs && npm run lint:eslint && npm run lint:types",
+    "lint:docs": "typedoc --validation",
+    "lint:eslint": "eslint .",
+    "lint:types": "tsc --noEmit",
     "prepublishOnly": "npm i && npm run build",
     "test:browser": "vitest run --project=browser",
     "test:node": "vitest run --project=node",
     "test:ui": "vitest --coverage --project=node --ui",
     "test:watch": "vitest",
-    "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "test": "npm run test:node && npm run test:browser"
   },
   "devDependencies": {
     "@eslint/compat": "2.0.0",
@@ -50,6 +53,7 @@
     "eslint-plugin-simple-import-sort": "12.1.1",
     "globals": "16.5.0",
     "tsdown": "0.16.6",
+    "typedoc": "0.28.14",
     "typescript": "5.9.3",
     "typescript-eslint": "8.47.0",
     "vitest": "4.0.12"

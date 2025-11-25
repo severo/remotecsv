@@ -13,19 +13,26 @@ jobs:
       - run: npm ci
       - run: npm run build
 
-  lint:
+  eslint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - run: npm ci
-      - run: npm run lint
+      - run: npm run lint:eslint
 
-  typecheck:
+  lint-types:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - run: npm ci
-      - run: npm run typecheck
+      - run: npm run lint:types
+
+  lint-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - run: npm run lint:docs
 
   test-node:
     runs-on: ubuntu-latest

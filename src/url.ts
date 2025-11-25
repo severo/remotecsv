@@ -6,17 +6,29 @@ import { parse } from './parser'
 import type { DelimiterError, ParseOptions, ParseResult } from './types'
 import { decode, isEmptyBlobURL } from './utils'
 
-interface FetchOptions {
+/** Options for fetching chunks of a remote file */
+export interface FetchOptions {
+  /** The size of each chunk to fetch. It must be a strictly positive integer. Default is 1MB. */
   chunkSize?: number
+  /** The byte where fetching starts. It must be a non-negative integer. Default is 0. */
   firstByte?: number
+  /** The last byte fetched (inclusive). It must be a non-negative integer. Default is the end of the file. */
   lastByte?: number
+  /** Optional fetch request initialization parameters. */
   requestInit?: RequestInit
+  /** Optional custom fetchChunk function for fetching chunks. */
   fetchChunk?: typeof fetchChunk
+  /** Optional custom parse function for parsing a string. */
   parse?: typeof parse
 }
-interface parseURLOptions extends ParseOptions, FetchOptions {
+
+/** Options for parsing a remote CSV file */
+export interface ParseURLOptions extends ParseOptions, FetchOptions {
+  /** The list of delimiters to guess from. If not provided, the parser will attempt to guess it. */
   delimitersToGuess?: string[]
+  /** The number of lines to preview for guessing. Defaults to 10. */
   previewLines?: number
+  /** Whether to strip the BOM character at the start of the text. Defaults to true. */
   stripBOM?: boolean
 }
 
@@ -44,13 +56,13 @@ interface parseURLOptions extends ParseOptions, FetchOptions {
  */
 export async function* parseURL(
   url: string,
-  options: parseURLOptions = {},
+  options: ParseURLOptions = {},
 ): AsyncGenerator<ParseResult, void, unknown> {
   const chunkSize = checkIntegerGreaterOrEqualThan(options.chunkSize, 1) ?? defaultChunkSize
   let firstByte = checkIntegerGreaterOrEqualThan(options.firstByte, 0) ?? 0
   // Note: lastByte can be -1 to indicate no data to fetch.
   // It's related to the bug in Node.js (https://github.com/nodejs/node/issues/60382) and the
-  // workaround we propose with toURL util (add ' ' at the end of the file, and set lastByte
+  // workaround we propose with toBlobURL util (add ' ' at the end of the file, and set lastByte
   // to the original file size - 1). If the file is empty, lastByte will be -1.
   let lastByte = checkIntegerGreaterOrEqualThan(options.lastByte, -1)
   if (lastByte !== undefined && lastByte < firstByte) {

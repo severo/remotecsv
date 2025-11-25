@@ -1,3 +1,13 @@
+/** Represents a Blob URL along with its file size and a revoke function. */
+export interface BlobURL {
+  /** The blob URL. */
+  url: string
+  /** The size of the file in bytes. */
+  fileSize: number
+  /** A function to revoke the blob URL. */
+  revoke: () => void
+}
+
 /**
  * Creates a blob URL from the given text.
  * @param text The text to create a blob URL from.
@@ -7,11 +17,7 @@
  * @returns An object containing the blob URL, the size of the file in bytes (without the extra space,
  *  if `withNodeWorkaround` is true), and a function to revoke the URL.
  */
-export function toURL(text: string, { withNodeWorkaround }: { withNodeWorkaround?: boolean } = {}): {
-  url: string
-  fileSize: number
-  revoke: () => void
-} {
+export function toBlobURL(text: string, { withNodeWorkaround }: { withNodeWorkaround?: boolean } = {}): BlobURL {
   withNodeWorkaround = withNodeWorkaround ?? false
   // add an extra space to fix https://github.com/nodejs/node/issues/60382
   const blob = new Blob([withNodeWorkaround ? text + ' ' : text])

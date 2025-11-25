@@ -30,11 +30,12 @@ export default defineConfig([
       'simple-import-sort/exports': 'error',
       'jsdoc/require-yields-type': 'off',
       'jsdoc/require-param-type': 'off',
+      'jsdoc/require-property-type': 'off',
       'jsdoc/require-returns-type': 'off',
     },
   },
   {
-    files: ['tests/*.ts'],
+    files: ['examples/**/*.ts', 'test/**/*.ts'],
     rules: {
       'jsdoc/require-jsdoc': 'off',
     },
