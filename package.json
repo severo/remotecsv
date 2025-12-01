@@ -1,7 +1,7 @@
 {
-  "name": "csv-range",
+  "name": "cosovo",
   "version": "0.1.1",
-  "description": "Parse ranges of a CSV file.",
+  "description": "Byte-precise CSV parser.",
   "keywords": [
     "csv",
     "fetch",
@@ -14,13 +14,13 @@
   ],
   "type": "module",
   "license": "MIT",
-  "homepage": "https://github.com/severo/csv-range#readme",
+  "homepage": "https://github.com/severo/cosovo#readme",
   "bugs": {
-    "url": "https://github.com/severo/csv-range/issues"
+    "url": "https://github.com/severo/cosovo/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/severo/csv-range.git"
+    "url": "git+https://github.com/severo/cosovo.git"
   },
   "author": "Sylvain Lesage <severo@rednegra.net>",
   "files": [

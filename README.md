@@ -1,18 +1,18 @@
-# csv-range
+# cosovo
 
-[![npm](https://img.shields.io/npm/v/csv-range)](https://www.npmjs.com/package/csv-range)
-[![minzipped](https://img.shields.io/bundlephobia/minzip/csv-range)](https://www.npmjs.com/package/csv-range)
-[![workflow status](https://github.com/severo/csv-range/actions/workflows/ci.yml/badge.svg)](https://github.com/severo/csv-range/actions)
+[![npm](https://img.shields.io/npm/v/cosovo)](https://www.npmjs.com/package/cosovo)
+[![minzipped](https://img.shields.io/bundlephobia/minzip/cosovo)](https://www.npmjs.com/package/cosovo)
+[![workflow status](https://github.com/severo/cosovo/actions/workflows/ci.yml/badge.svg)](https://github.com/severo/cosovo/actions)
 [![mit license](https://img.shields.io/badge/License-MIT-orange.svg)](https://opensource.org/licenses/MIT)
 ![coverage](https://img.shields.io/badge/Coverage-100-darkred)
-[![dependencies](https://img.shields.io/badge/Dependencies-0-blueviolet)](https://www.npmjs.com/package/csv-range?activeTab=dependencies)
+[![dependencies](https://img.shields.io/badge/Dependencies-0-blueviolet)](https://www.npmjs.com/package/cosovo?activeTab=dependencies)
 
 Fetch and parse ranges of CSV file.
 
 ## Install
 
 ```bash
-npm install csv-range
+npm install cosovo
 ```
 
 ## Usage
@@ -20,7 +20,7 @@ npm install csv-range
 Parse a remote CSV file from a URL:
 
 ```typescript
-import { parseURL } from 'csv-range'
+import { parseURL } from 'cosovo'
 const url = 'https://data.source.coop/severo/csv-papaparse-test-files/sample.csv'
 const rows = []
 for await (const { row } of parseURL(url)) {
@@ -37,7 +37,7 @@ The `parseURL` function yields an object for each row with the following propert
 - `errors`: array of parsing errors found in the row.
 - `meta`: object with metadata about the parsing process.
 
-The format is described on the doc pages: https://severo.github.io/csv-range/interfaces/ParseResult.html.
+The format is described on the doc pages: https://severo.github.io/cosovo/interfaces/ParseResult.html.
 
 The `row` field might contain fewer or more columns than expected, depending on the CSV content. It can be an empty array for empty rows. It's up to the user to handle these cases. The library does not trim whitespace from values, and it does not convert types.
 
@@ -49,19 +49,19 @@ The `meta` field provides the `delimiter` and `newline` strings, detected automa
 
 The `parseURL` function accepts an optional second argument with options.
 
-It can contain options for [fetching](https://severo.github.io/csv-range/interfaces/FetchOptions.html) the CSV file, for [guessing](https://severo.github.io/csv-range/interfaces/GuessOptions.html) the delimiter and newline characters, and for [parsing](https://severo.github.io/csv-range/interfaces/ParseOptions.html) the CSV content.
+It can contain options for [fetching](https://severo.github.io/cosovo/interfaces/FetchOptions.html) the CSV file, for [guessing](https://severo.github.io/cosovo/interfaces/GuessOptions.html) the delimiter and newline characters, and for [parsing](https://severo.github.io/cosovo/interfaces/ParseOptions.html) the CSV content.
 
 
 ## Examples
 
-Find some examples of usage below. You can also find them in the [examples](https://github.com/severo/csv-range/tree/main/examples/) directory, and run them with `npm run examples`.
+Find some examples of usage below. You can also find them in the [examples](https://github.com/severo/cosovo/tree/main/examples/) directory, and run them with `npm run examples`.
 
 ### Only the first 10 rows
 
 As the library uses async iterators, it's easy to stop parsing after a certain number of rows:
 
 ```typescript
-import { parseURL } from 'csv-range'
+import { parseURL } from 'cosovo'
 const url = 'https://data.source.coop/severo/csv-papaparse-test-files/verylong-sample.csv'
 const rows = []
 let count = 0
@@ -80,7 +80,7 @@ console.log(rows)
 You can fetch only a specific byte range of the CSV file, to parse only a part of it. This is useful for large files.
 
 ```typescript
-import { parseURL } from 'csv-range'
+import { parseURL } from 'cosovo'
 const url = 'https://data.source.coop/severo/csv-papaparse-test-files/verylong-sample.csv'
 const fetchOptions = {
     firstByte: 30_000,
@@ -93,14 +93,14 @@ for await (const { row } of parseURL(url, { fetch: fetchOptions })) {
 console.log(rows)
 ```
 
-Use the `result.meta.byteOffset` and `result.meta.byteCount` fields to know the exact byte range of each parsed row, and adjust your fetching strategy accordingly. See the [examples](https://github.com/severo/csv-range/tree/main/examples/) for an in-depth look.
+Use the `result.meta.byteOffset` and `result.meta.byteCount` fields to know the exact byte range of each parsed row, and adjust your fetching strategy accordingly. See the [examples](https://github.com/severo/cosovo/tree/main/examples/) for an in-depth look.
 
 ### Parse a string
 
 You can also parse a CSV string directly with the `parseString` function:
 
 ```typescript
-import { parseText } from 'csv-range'
+import { parseText } from 'cosovo'
 const csvString = 'A,B,C\nX,Y,Z'
 const rows = []
 for await (const { row } of parseText(csvString)) {

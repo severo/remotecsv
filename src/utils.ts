@@ -65,7 +65,7 @@ export function decode(bytes: Uint8Array<ArrayBufferLike>, { stripInvalidBytesAt
   const decoder = new TextDecoder('utf-8', {
     // don't strip the BOM, we handle it in the parse function
     ignoreBOM: true,
-    // throw on decoding errors, see https://github.com/severo/csv-range/issues/16
+    // throw on decoding errors, see https://github.com/severo/cosovo/issues/16
     fatal: true,
   })
 
