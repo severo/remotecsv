@@ -10,6 +10,7 @@
 
 ## [0.1.0]
 
+- [Breaking] rename toURL utility function to toBlobURL
 - export more types
 - add example tests, docs and improve README
 
@@ -28,7 +29,7 @@
 
 ## [0.0.7]
 
-- export toBlobURL utility function
+- export toURL utility function
 
 ## [0.0.6]
 
