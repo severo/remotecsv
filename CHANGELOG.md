@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.2.0]
+
+- renamed csv-range to cosovo
+
 ## [0.1.1]
 
 - add keywords to package.json
