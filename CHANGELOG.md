@@ -2,7 +2,7 @@
 
 ## [0.2.0]
 
-- renamed csv-range to cosovo
+- [breaking] renamed csv-range to cosovo
 
 ## [0.1.1]
 
@@ -10,7 +10,7 @@
 
 ## [0.1.0]
 
-- [Breaking] rename toURL utility function to toBlobURL
+- [breaking] rename toURL utility function to toBlobURL
 - export more types
 - add example tests, docs and improve README
 
